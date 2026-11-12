@@ -6,7 +6,7 @@ argument-hint: "<slug or idea> [--adopt <path|url>] [--review]"
 
 # Stage 1 — Intent
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` and `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md`.
 
 The intent records what the originator wants and why, and never how. It replaces backlog entries, user stories and refinement meetings. Anyone can be the originator.
 
@@ -24,7 +24,7 @@ Input: `$ARGUMENTS`
 
 ## Adopt and review modes
 
-Follow `stage-rules.md`. The Goldfish review is `egm-review-loop` with the Heilmeier standard, using the inputs in `tools.md`.
+Follow `stage-rules.md`. The Goldfish review is `egm-review-loop` with the Heilmeier standard, using the inputs in `egm.md`.
 
 ## Template
 

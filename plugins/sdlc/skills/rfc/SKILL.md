@@ -6,7 +6,7 @@ argument-hint: "<slug> [--adopt <path|url>] [--review]"
 
 # Stage 3 — RFC
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` and `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md` and `${CLAUDE_PLUGIN_ROOT}/references/rfc-skill.md`.
 
 The RFC decides how the system will meet the spec. It covers the options, the chosen design and its trade-offs, the fallback, the phases and PRs, the proposed tickets and the blast radius. The Plan stage turns its phases into work items, and after Ship the ADR stage copies it into a record of what was actually built.
 
@@ -16,7 +16,7 @@ Feature: `$ARGUMENTS`
 
 1. **Read `intent.md`, `spec.md` and `egm/concepts_brief.md`.** Stop if the spec isn't approved. For a low-risk spec, ask the approver whether to skip this stage. A skip records its reason and also skips the ADR.
 
-2. **Write the RFC** with the `rfc` skill, using the overrides in `tools.md`, so it lands at `docs/sdlc/<slug>/rfc.src.html` and `rfc.html`. If the `rfc` skill isn't available, use the `egm-draft` fallback in `tools.md`, which writes `rfc.md`.
+2. **Write the RFC** with the `rfc` skill, using the overrides in `rfc-skill.md`, so it lands at `docs/sdlc/<slug>/rfc.src.html` and `rfc.html`. If the `rfc` skill isn't available, use the `egm-draft` fallback in `rfc-skill.md`, which writes `rfc.md`.
 
 3. **Check it against the spec.** Every requirement must be met by the chosen design, and every acceptance criterion must have a test planned somewhere in the phases. List any gap as an open question tagged "before approval".
 

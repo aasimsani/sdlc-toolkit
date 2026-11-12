@@ -6,7 +6,7 @@ argument-hint: "<slug> [--adopt <path|url>] [--review]"
 
 # Stage 4 — Plan
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` and `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md` and `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md`.
 
 The RFC says which phases and PRs exist. The plan says exactly which files change, in what order, with which test first. Planning happens in plan mode, where Claude can read the code but can't change it.
 
@@ -18,19 +18,19 @@ Feature: `$ARGUMENTS`
 
 2. **Read `spec.md`, the RFC and every file the change touches,** along with the tests around those files.
 
-3. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Every acceptance criterion must map to a test.
+3. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Every acceptance criterion must map to a test. Describe every phase, and write todos for the first phase only.
 
-4. **Challenge the plan.** Before showing it, take these two passes and fold the answers into the work order:
+4. **Challenge the plan.** Before showing it, take these two passes and fold the answers into the phases:
    - **Risk.** Ask what could break that the tests won't catch, and which step is riskiest.
-   - **Size.** Run ponytail's ladder from `tools.md` on every new file, class, dependency and config option in the plan. Replace each one that fails the ladder with the smaller option it names, such as an existing helper, a standard library call, or nothing. Keep everything `spec.md` requires.
+   - **Size.** Run the ladder in `ponytail.md` on every new file, class, dependency and config option in the plan. Replace each one that fails the ladder with the smaller option it names, such as an existing helper, a standard library call, or nothing. Keep everything `spec.md` requires.
 
 5. **Apply the stranger test.** Someone who has never seen this conversation should be able to implement the plan from the file alone.
 
 6. **Present it** with ExitPlanMode. Revise until the engineer accepts it.
 
-7. **Write `docs/sdlc/<slug>/plan.md`** after leaving plan mode.
+7. **Write `docs/sdlc/<slug>/plan.md`** after leaving plan mode. From here on it's the feature's one plan file and its todo list. The draft that plan mode kept is no longer used.
 
-8. **Gate.** The Goldfish review is `egm-review` with the `implementation` preset, using the inputs in `tools.md`. Commit `plan.md`, its report and `sdlc.yaml` together.
+8. **Gate.** The Goldfish review is `egm-review` with the `implementation` preset, using the inputs in `egm.md`. Commit `plan.md`, its report and `sdlc.yaml` together.
 
 ## Adopt and review modes
 
@@ -48,22 +48,30 @@ Verify command: `<from CLAUDE.md>`
 |---|---|
 | `path/to/file` | <what changes and why> |
 
-## Work order
-Each phase starts with a failing test, then makes it pass, then cleans up. Each phase ends with a pr-review run.
+## Phases
+| # | Phase | Covers | Depends on | First failing test | Runs in | Status |
+|---|---|---|---|---|---|---|
+| 1 | <name> | AC1, PR 1 in the RFC | — | `<test file>::<test name>` | main session | in_progress |
+| 2 | <name> | AC2, PR 1 in the RFC | 1 | `<test file>::<test name>` | worktree `<name>` | pending |
 
-### Phase 1 — <name> (PR 1 in the RFC; worktree: <name, or "main session">)
-- [ ] Write a failing test for AC1 in `<test file>`
+Status is `pending`, `in_progress` or `done`. One phase is in progress per session or worktree.
+
+### Phase 1 — <name>
+<What this phase builds, in enough detail for a stranger to implement it.>
+
+### Phase 2 — <name>
+<...>
+
+## Todos
+Only a phase that's in progress has todos here. Build writes the next phase's todos when it starts that phase.
+
+### Phase 1 — <name>
+- [ ] Write the failing test `<test name>` and watch it fail
 - [ ] Implement <thing> until the test passes
-- [ ] Refactor, run the verify command, and run pr-review --local
-
-### Phase 2 — <name> (depends on: Phase 1)
-- [ ] ...
+- [ ] Refactor, run the verify command, and run pr-review
 
 ## Tests
 | Acceptance criterion | Test |
 |---|---|
 | AC1 | `<test file>::<test name>` |
-
-## Parallel work
-<Name the phases that share no files and can run in separate worktrees. Write "None" if every phase depends on the one before.>
 ```

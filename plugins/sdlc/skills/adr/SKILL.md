@@ -6,7 +6,7 @@ argument-hint: "<slug>"
 
 # Stage 8 — ADR
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` and `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md`.
 
 The RFC records what we proposed. The ADR records what we decided and built. The ADR starts as a copy of the RFC, and the RFC itself never changes, so a reader can compare the two.
 
