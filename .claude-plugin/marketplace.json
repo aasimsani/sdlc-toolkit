@@ -1,0 +1,16 @@
+{
+  "name": "sdlc-toolkit",
+  "metadata": {
+    "description": "AI-native SDLC loop for Claude Code"
+  },
+  "owner": {
+    "name": "Aasim Sani"
+  },
+  "plugins": [
+    {
+      "name": "sdlc",
+      "source": "./plugins/sdlc",
+      "description": "Runs a feature through intent, spec, plan, build, test, ship and maintain. Each stage ends by committing one artifact under docs/sdlc/<slug>/, and that commit starts the next stage."
+    }
+  ]
+}
