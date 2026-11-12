@@ -254,14 +254,15 @@ Three rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers 
 | A stage is approved only with its tools on record | Denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml` |
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 420}}}%%
 flowchart TB
-    cmd(["Claude is about to run a Bash command"]) --> q1{"gh pr merge, or an approving gh pr review?"}
+    cmd(["Claude is about to run a Bash command"]) --> q1{{"Is it gh pr merge, or an approving gh pr review?"}}
     q1 -- yes --> ask(["Ask the user"])
-    q1 -- no --> q2{"git commit?"}
+    q1 -- no --> q2{{"Is it a git commit?"}}
     q2 -- no --> allow(["Allow"])
-    q2 -- yes --> q3{"On the default branch?"}
+    q2 -- yes --> q3{{"Is the branch the default branch?"}}
     q3 -- yes --> deny1(["Deny"])
-    q3 -- no --> q4{"Does it approve a stage with a tool missing from sdlc.yaml?"}
+    q3 -- no --> q4{{"Does it approve a stage with a tool missing from sdlc.yaml?"}}
     q4 -- yes --> deny2(["Deny"])
     q4 -- no --> allow
 ```
