@@ -18,9 +18,9 @@ Feature: `$ARGUMENTS`
 
 2. **Read `spec.md`, the RFC and every file the change touches,** along with the tests around those files.
 
-3. **Decide the tests.** Invoke `testing-toolkit:testing`, with the inputs and overrides in `testing-toolkit.md`. It classifies the change and picks a kind of test for each component, and it writes no test in this stage. Without the toolkit, choose the tests yourself.
+3. **Decide the tests.** Invoke `testing-toolkit:testing`, with the inputs and overrides in `testing-toolkit.md`. It classifies the change and picks a kind of test for each component, and it writes no test in this stage. Then sort each test into the Build tests, which drive a phase's code, or the final tests, which need the whole feature. `testing-toolkit.md` has the rule. Without the toolkit, choose and sort the tests yourself.
 
-4. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Put the chosen tests in the Tests section. Every acceptance criterion must map to a test, and every phase takes its first failing test from that section. Describe every phase, and write todos for the first phase only.
+4. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Put the chosen tests in the Tests section. Every acceptance criterion must map to a test, and every phase takes its first failing test from its Build rows. Describe every phase, and write todos for the first phase only.
 
 5. **Challenge the plan.** Before showing it, take these two passes and fold the answers into the phases:
    - **Risk.** Ask what could break that the tests won't catch, and which step is riskiest.
@@ -73,12 +73,13 @@ Only a phase that's in progress has todos here. Build writes the next phase's to
 - [ ] Refactor, run the verify command, and run pr-review
 
 ## Tests
-Build writes each of these before the code it tests.
+Build writes each Build test before the code it tests. Test writes the final tests, which need the whole feature.
 
 - Scenario: <the testing toolkit's scenario for the change>. Done when: <the playbook's condition for it>.
 - Left out: <kind of test — reason>
 
-| Acceptance criterion | Test | Kind | Where the bug would be |
-|---|---|---|---|
-| AC1 | `<test file>::<test name>` | <unit, integration, ...> | <the component's own logic, or the boundary it crosses> |
+| Acceptance criterion | Test | Kind | Written in | Where the bug would be |
+|---|---|---|---|---|
+| AC1 | `<test file>::<test name>` | <unit, integration, ...> | Build, phase 1 | <the component's own logic, or the boundary it crosses> |
+| AC2 | `<test file>::<test name>` | <end-to-end, load, ...> | Test | <the user's journey, or the hot path under load> |
 ```
