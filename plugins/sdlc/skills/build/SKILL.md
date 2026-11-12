@@ -1,6 +1,6 @@
 ---
 name: build
-description: SDLC stage 5. Implements an approved docs/sdlc/<slug>/plan.md phase by phase, test first, with a verify loop and a pr-review --local run at the end of each phase. Use when the user runs /sdlc:build or the sdlc skill routes here.
+description: SDLC stage 5. Implements an approved docs/sdlc/<slug>/plan.md phase by phase in ponytail mode, test first, with a verify loop and a pr-review --local run at the end of each phase. Use when the user runs /sdlc:build or the sdlc skill routes here.
 argument-hint: "<slug> [phase]"
 ---
 
@@ -17,6 +17,7 @@ Feature: `$ARGUMENTS`
 - Stop if `plan.md` isn't approved.
 - Work on the feature branch from `sdlc.yaml`, never on the default branch.
 - Run the verify command once, so you know the starting state.
+- **Turn on ponytail mode.** Invoke `ponytail:ponytail` with the Skill tool, at its default level, before the first phase. It shapes every edit toward the smallest change that works. The plan's tests and the spec's requirements still win over it, as `tools.md` explains. If ponytail isn't installed, say so and continue.
 
 ## Each phase
 

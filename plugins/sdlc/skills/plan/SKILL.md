@@ -20,7 +20,9 @@ Feature: `$ARGUMENTS`
 
 3. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Every acceptance criterion must map to a test.
 
-4. **Challenge the plan.** Before showing it, ask what could break that the tests won't catch, and which step is riskiest. Fold the answers into the work order.
+4. **Challenge the plan.** Before showing it, take these two passes and fold the answers into the work order:
+   - **Risk.** Ask what could break that the tests won't catch, and which step is riskiest.
+   - **Size.** Run ponytail's ladder from `tools.md` on every new file, class, dependency and config option in the plan. Replace each one that fails the ladder with the smaller option it names, such as an existing helper, a standard library call, or nothing. Keep everything `spec.md` requires.
 
 5. **Apply the stranger test.** Someone who has never seen this conversation should be able to implement the plan from the file alone.
 

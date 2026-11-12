@@ -1,6 +1,6 @@
 ---
 name: setup
-description: One-time setup that prepares a repo, and this machine, for the /sdlc loop. Installs the EGM and pr-review plugins if they're missing, and sets up CLAUDE.md, one verify command, REVIEW.md and docs/sdlc/. Use when the user runs /sdlc:setup, or when the sdlc skill reports that something is missing.
+description: One-time setup that prepares a repo, and this machine, for the /sdlc loop. Installs the EGM, pr-review and ponytail plugins if they're missing, and sets up CLAUDE.md, one verify command, REVIEW.md and docs/sdlc/. Use when the user runs /sdlc:setup, or when the sdlc skill reports that something is missing.
 ---
 
 # SDLC setup (once per machine, once per repo)
@@ -24,9 +24,15 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
    ```
    If the `claude plugin list --json` output shows two enabled `pr-review@` plugins, ask the user which one to keep and disable the other. Two copies share the skill name `pr-review:pr-review`.
 
-4. **Check pr-review's tools.** Make sure `gh auth status` passes and `jq` is on `PATH`.
+4. **Install ponytail** if no enabled `ponytail@` plugin exists. Ask first, then run:
+   ```bash
+   claude plugin marketplace add DietrichGebert/ponytail
+   claude plugin install ponytail@ponytail
+   ```
 
-5. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
+5. **Check pr-review's tools.** Make sure `gh auth status` passes and `jq` is on `PATH`.
+
+6. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
 
 ## Repo
 

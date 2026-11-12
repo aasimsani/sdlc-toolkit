@@ -14,11 +14,11 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 2 | Spec | `spec.md` | `egm-review-loop` with the feature-spec standard |
 | 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | `egm-review`, then `egm-resolve` |
 | 4 | Plan | `plan.md` | `egm-review` implementation-readiness stage |
-| 5 | Build | code + tests | `pr-review --local` with the ponytail lens, after each phase |
+| 5 | Build | code + tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
 | 6 | Test | `verify.md` | `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
-| 9 | Maintain | `lessons.md` | `egm-drift-report` + live signals |
+| 9 | Maintain | `lessons.md` | `egm-drift-report`, `ponytail-audit` + live signals |
 
 `docs/sdlc/<slug>/sdlc.yaml` records each stage's status, owner and approver. A human approves every artifact. Claude never approves its own work, merges a PR, or deploys to production.
 
@@ -29,7 +29,7 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM and pr-review if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists.
+Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists.
 
 ## Use
 
@@ -40,7 +40,7 @@ Then run `/sdlc:setup` in a repo. It installs EGM and pr-review if they're missi
 | `/sdlc:<stage> <slug>` | Runs one stage: `intent`, `spec`, `rfc`, `plan`, `build`, `test`, `ship`, `adr` or `maintain`. |
 | `… --adopt <path\|url>` | Brings in an artifact someone wrote elsewhere, such as a file, Notion page, Google Doc or Linear doc, then runs its review and gate. |
 | `… --review` | Runs as the stage's manager. Claude reviews someone else's artifact and records your decision without editing it. |
-| `/sdlc:maintain drift` | Checks every ADR against the current code. |
+| `/sdlc:maintain drift` | Checks every ADR against the current code, and audits the repo for over-engineering with `ponytail-audit`. |
 
 ## Extending
 
@@ -57,6 +57,10 @@ pr-review gives each review one **panel**, which says who reviews, and any numbe
 | `REVIEW.md` and `.pr-review/` in the target repo | Every review of that repo | A migrations lens for a repo with a database |
 
 The ponytail lens runs during Build and Test because cutting code is cheapest before review. Its SIMPLE findings are never High or Critical, so they suggest cuts without blocking a stage. It stays off the Ship review, so the human approver reads correctness findings without simplification nits. To change that, edit the stage defaults in `tools.md`, or set `ship: {lenses: [...]}` for one feature.
+
+### Ponytail
+
+Ponytail runs at four points without anyone invoking it. Plan applies its ladder to every file, dependency and option the plan adds. Build turns on ponytail mode before the first phase. Build and Test pass its lens to pr-review. `/sdlc:maintain drift` runs `ponytail-audit`. The plan's tests and the spec's requirements always win over ponytail. To change where it runs, edit the Run ponytail table in [`references/tools.md`](plugins/sdlc/references/tools.md).
 
 ### Document reviewers (EGM)
 

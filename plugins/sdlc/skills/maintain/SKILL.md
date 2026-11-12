@@ -30,7 +30,10 @@ Input: `$ARGUMENTS`
 
 ## For drift across features
 
-When the input is `drift`, run `egm-drift-report` on `docs/sdlc/` to compare every ADR with the current code. Then let the user decide, divergence by divergence, whether the code or the record is wrong. A wrong record gets a superseding ADR through a new intent. Wrong code gets a new intent.
+When the input is `drift`, run two checks:
+
+1. **Records against code.** Run `egm-drift-report` on `docs/sdlc/` to compare every ADR with the current code. Then let the user decide, divergence by divergence, whether the code or the record is wrong. A wrong record gets a superseding ADR through a new intent. Wrong code gets a new intent.
+2. **Over-engineering across features.** Run `ponytail:ponytail-audit` on the repo. It ranks what to delete or simplify across the whole tree, which catches complexity that built up feature by feature. Drop any cut that an ADR records as deliberate. The user picks the cuts worth making, and each one becomes a new intent, or one intent that groups them.
 
 ## For an incident or regression
 

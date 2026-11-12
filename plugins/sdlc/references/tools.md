@@ -1,6 +1,6 @@
 # External tools the stages use
 
-The loop leans on three tools that live outside this plugin. They're EGM (Google's Elephant-Goldfish Model), pr-review and the `rfc` skill. `sdlc:setup` installs the first two.
+The loop leans on four tools that live outside this plugin. They're EGM (Google's Elephant-Goldfish Model), pr-review, ponytail and the `rfc` skill. `sdlc:setup` installs the first three.
 
 ## Find a plugin's install path
 
@@ -69,6 +69,23 @@ After each run, take these steps:
 4. Critical and High findings block the stage. Fix each one, or record a won't-fix reason that the approver accepts. Medium and Low findings are the owner's call.
 
 The script appends the repo's `REVIEW.md` to its prompt, so the team's review rules apply on every run.
+
+## Run ponytail
+
+[ponytail](https://github.com/DietrichGebert/ponytail) pushes code toward the smallest change that works. Its skills accept model invocation, so call them with the Skill tool.
+
+| Stage | How ponytail runs |
+|---|---|
+| Plan | The plan's self-challenge applies ponytail's ladder to every file and function the plan adds. |
+| Build | Invoke `ponytail:ponytail` before the first phase. It stays on for the rest of the session. |
+| Build, Test | pr-review runs with `examples/ponytail-lens.md`, which checks the code ponytail shaped. |
+| Maintain | `drift` also runs `ponytail:ponytail-audit` on the whole repo. |
+
+The ladder asks five questions in order. Does it need to exist at all? Does this codebase already have it? Does the standard library or the platform do it? Does an installed dependency solve it? Can it be one line? The first "yes" names the smaller option.
+
+Ponytail never overrides the loop's own rules. Every test in `plan.md` gets written, even where ponytail's "one runnable check" minimum would stop sooner, because those tests prove the acceptance criteria. Every requirement in `spec.md` gets built, including its non-functional requirements, because the approver already decided they're needed. When ponytail and the plan disagree, follow the plan and raise the disagreement with the engineer.
+
+If ponytail isn't installed, the lens still runs through pr-review. Say that the Build session ran without ponytail mode.
 
 ## Run the rfc skill
 
