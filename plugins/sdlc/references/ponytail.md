@@ -15,6 +15,6 @@ The ladder asks five questions in order. Does it need to exist at all? Does this
 
 ## What ponytail may not change
 
-Ponytail never overrides the loop's own rules. Every test in `plan.md` gets written, even where ponytail's "one runnable check" minimum would stop sooner, because those tests prove the acceptance criteria. Every requirement in `spec.md` gets built, including its non-functional requirements, because the approver already decided they're needed. When ponytail and the plan disagree, follow the plan and raise the disagreement with the engineer.
+Ponytail never overrides the loop's own rules. Every test in `plan.md` gets written, and so does every test the testing toolkit keeps, even where ponytail's "one runnable check" minimum would stop sooner, because those tests prove the acceptance criteria. Every requirement in `spec.md` gets built, including its non-functional requirements, because the approver already decided they're needed. When ponytail and the plan disagree, follow the plan and raise the disagreement with the engineer.
 
 If ponytail isn't installed, the lens still runs through pr-review. Record the Build stage's `ponytail` tool as skipped, with that reason.
