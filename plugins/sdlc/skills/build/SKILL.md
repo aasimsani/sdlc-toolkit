@@ -23,7 +23,7 @@ Feature: `$ARGUMENTS`
 
 1. **Pick the phase.** Take the phase that's `in_progress` in the plan's Phases table. If it has a `Resume:` line, start from there and don't redo a checked todo. If no phase is in progress, take the first `pending` phase whose dependencies are `done`, or the phase the user named. Set it to `in_progress` and write its todos under `## Todos`.
 
-2. **Test first.** Invoke `testing-toolkit:testing` for the phase, with the inputs and overrides in `testing-toolkit.md`. It picks the kinds of test the phase needs and writes them from the spec. Without the toolkit, write the failing test yourself. Run the tests, confirm each one fails for the expected reason, and commit them.
+2. **Test first.** Invoke `testing-toolkit:testing` for the phase, with the inputs and overrides in `testing-toolkit.md`. It writes the tests the plan chose for the phase, from the spec. Without the toolkit, write them yourself. Run the tests, confirm each one fails for the expected reason, and commit them.
 
 3. **Make it pass.** Write the smallest change that makes the test pass, and don't edit the test to make it pass. If the test itself is wrong, stop and tell the user.
 

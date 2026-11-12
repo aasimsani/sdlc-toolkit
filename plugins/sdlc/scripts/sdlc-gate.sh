@@ -23,7 +23,8 @@ SEP=$'\037'                           # joins the lines of one stage entry, so a
 # tests/test_structure.sh fails when the two differ.
 required_tools() {
   case "$1" in
-    intent|spec|plan|adr) echo "goldfish" ;;
+    intent|spec|adr) echo "goldfish" ;;
+    plan)  echo "testing goldfish" ;;
     rfc)   echo "rfc-skill goldfish" ;;
     build) echo "ponytail testing pr-review" ;;
     test)  echo "testing verifier pr-review" ;;

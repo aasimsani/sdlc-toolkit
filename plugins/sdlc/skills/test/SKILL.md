@@ -14,7 +14,7 @@ Feature: `$ARGUMENTS`
 
 ## Steps
 
-1. **Check the tests.** Invoke `testing-toolkit:testing` on the whole branch, with the inputs and overrides in `testing-toolkit.md`. It finds changed code that no test checks and acceptance criteria that have no test, and it writes the missing tests. Commit the tests it adds. Without the toolkit, skip this step and record why.
+1. **Check the tests.** Invoke `testing-toolkit:testing` on the whole branch, with the inputs and overrides in `testing-toolkit.md`. It checks the tests against the plan's Tests section, finds changed code that no test checks, and writes the missing tests. Commit the tests it adds. Without the toolkit, skip this step and record why.
 
 2. **Run the verify command** on a clean checkout of the feature branch, and keep the literal output.
 

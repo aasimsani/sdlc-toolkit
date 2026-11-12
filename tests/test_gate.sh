@@ -94,6 +94,8 @@ state '  build: {status: approved, tools: {ponytail: pr-review/build-1.md, testi
 check "every required tool on record is allowed"             allow "$T/led" "$c"
 state '  test: {status: approved, artifact: verify.md, tools: {verifier: verify.md, pr-review: pr-review/build-1.md}}'
 check "Test isn't approved without the testing toolkit on record" deny "$T/led" "$c"
+state '  plan: {status: approved, artifact: plan.md, tools: {goldfish: egm/spec-review.md}}'
+check "Plan isn't approved without the testing toolkit on record" deny "$T/led" "$c"
 state '  spec:' '    status: approved' '    tools:' '      goldfish: egm/spec-review.md'
 check "a block-style entry is read the same way"             allow "$T/led" "$c"
 state '  spec:' '    status: approved' '    tools:' '      goldfish: skipped' '    artifact: spec.md'

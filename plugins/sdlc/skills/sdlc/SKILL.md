@@ -15,8 +15,8 @@ Each stage ends by committing one artifact, and that commit starts the next stag
 | 1 | Intent | `sdlc:intent` | `intent.md` (from EGM's concepts brief) | `egm-brainstorm` swarm |
 | 2 | Spec | `sdlc:spec` | `spec.md` | `egm-review-loop` |
 | 3 | RFC | `sdlc:rfc` | `rfc.src.html` + `rfc.html` | `egm-review`, then `egm-resolve` |
-| 4 | Plan | `sdlc:plan` | `plan.md` | `egm-review` implementation stage |
-| 5 | Build | `sdlc:build` | code + tests, picked by the testing toolkit | ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
+| 4 | Plan | `sdlc:plan` | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation stage |
+| 5 | Build | `sdlc:build` | code + tests, each test written first | ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
 | 6 | Test | `sdlc:test` | `verify.md` | the testing toolkit's check of the tests, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | `sdlc:ship` | PR + `review.md` | `pr-review --repo --pr`, then a human |
 | 8 | ADR | `sdlc:adr` | `adr.src.html` + `adr.html` (a copy of the RFC, updated to what shipped) | `egm-drift-report` |
