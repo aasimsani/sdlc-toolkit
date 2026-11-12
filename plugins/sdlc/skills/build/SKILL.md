@@ -21,7 +21,7 @@ Feature: `$ARGUMENTS`
 
 ## Each phase
 
-1. **Pick the phase.** Take the phase that's `in_progress` in the plan's Phases table. If none is, take the first `pending` phase whose dependencies are `done`, or the phase the user named. Set it to `in_progress` and write its todos under `## Todos`.
+1. **Pick the phase.** Take the phase that's `in_progress` in the plan's Phases table. If it has a `Resume:` line, start from there and don't redo a checked todo. If no phase is in progress, take the first `pending` phase whose dependencies are `done`, or the phase the user named. Set it to `in_progress` and write its todos under `## Todos`.
 
 2. **Test first.** Write the failing test, run it, and confirm it fails for the expected reason. Commit the test.
 
@@ -32,6 +32,10 @@ Feature: `$ARGUMENTS`
 5. **Review with pr-review.** Commit, then run `pr-review --local` with the ponytail lens and the feature's perspectives, as `pr-review.md` describes. Apply the SIMPLE cuts the owner agrees with now, while the code is cheap to change. Fix the blocking findings, commit the fixes, and run it again until none is open. Report what's fixed, new and still open.
 
 6. **Keep `plan.md` true.** Check off each todo when it's done. When a phase's todos are all checked and its review has no open blocking finding, set the phase to `done`. When the work has to depart from the plan, update `plan.md` in the same commit as the code and say what changed. If the departure changes a requirement or the RFC's design, stop and go back to that stage.
+
+## Stopping mid-phase
+
+When the session has to stop before a phase is done, stop where the verify command passes, or back out the last edit. Commit what's there as one `wip:` commit. Then write a `Resume:` line under the phase's todos that says what's verified, what comes next, and anything the next session wouldn't guess.
 
 ## Parallel phases
 

@@ -59,4 +59,66 @@ reason="$(jq -n --arg cwd "$T/work" '{tool_name:"Bash",cwd:$cwd,tool_input:{comm
   | bash "$GATE" 2>/dev/null | jq -r '.hookSpecificOutput.permissionDecisionReason')"
 if [[ "$reason" == *"git switch"* ]]; then echo "ok   - a denial says how to proceed"; else echo "FAIL - a denial says how to proceed"; fail=1; fi
 
+# --- Rule 3: a stage is approved only with its tools accounted for ------------
+mkrepo "$T/led" main; git -C "$T/led" switch -qc feature-y
+L="$T/led/docs/sdlc/demo"; mkdir -p "$L/egm" "$L/pr-review"
+# state <lines...> writes sdlc.yaml with an approved intent, which HEAD already has, and the given stage lines.
+state() {
+  { printf 'feature: demo\nstages:\n  intent: {status: approved, owner: Sam, approver: Lee, artifact: intent.md}\n'
+    printf '%s\n' "$@"; } > "$L/sdlc.yaml"
+}
+state '  spec: {status: draft, owner: Sam, approver: Lee, artifact: spec.md}'
+git -C "$T/led" add -A; git -C "$T/led" -c user.email=t@example.com -c user.name=t commit -qm "draft spec"
+c='git add -A && git commit -m x'
+
+check "a stage approved before the ledger existed doesn't block a commit" allow "$T/led" "$c"
+state '  spec: {status: approved, owner: Sam, approver: Lee, artifact: spec.md}'
+check "approving a stage with no tools recorded is denied"   deny  "$T/led" "$c"
+state '  spec: {status: approved, artifact: spec.md, tools: {goldfish: egm/spec-review.md}}'
+check "a tool whose file is missing is denied"               deny  "$T/led" "$c"
+touch "$L/egm/spec-review.md"
+check "a tool with the file it produced is allowed"          allow "$T/led" "$c"
+state '  spec: {status: approved, artifact: spec.md, tools: {goldfish: "skipped: one-line change, Lee agreed"}}'
+check "a skipped tool with a reason is allowed"              allow "$T/led" "$c"
+state '  spec: {status: approved, artifact: spec.md, tools: {goldfish: skipped}}'
+check "a skipped tool with no reason is denied"              deny  "$T/led" "$c"
+state '  spec: {status: skipped, reason: "typo fix, Lee agreed"}'
+check "a skipped stage needs no tools"                       allow "$T/led" "$c"
+touch "$L/pr-review/build-1.md"
+state '  build: {status: approved, tools: {pr-review: pr-review/build-1.md}}'
+check "one tool on record doesn't cover the stage's other tool" deny "$T/led" "$c"
+state '  build: {status: approved, tools: {ponytail: pr-review/build-1.md, pr-review: pr-review/build-1.md}}'
+check "every required tool on record is allowed"             allow "$T/led" "$c"
+state '  spec:' '    status: approved' '    tools:' '      goldfish: egm/spec-review.md'
+check "a block-style entry is read the same way"             allow "$T/led" "$c"
+state '  spec:' '    status: approved' '    tools:' '      goldfish: skipped' '    artifact: spec.md'
+check "a block-style skip with no reason is denied"          deny  "$T/led" "$c"
+
+state '  spec: {status: draft}'
+mkdir -p "$T/led/docs/sdlc/new"
+printf 'feature: new\nstages:\n  intent: {status: approved, owner: Sam}\n' > "$T/led/docs/sdlc/new/sdlc.yaml"
+check "a new feature's first approval is checked too"        deny  "$T/led" "$c"
+rm -r "$T/led/docs/sdlc/new"
+
+state '  spec: {status: approved, artifact: spec.md}'
+reason="$(jq -n --arg cwd "$T/led" --arg c "$c" '{tool_name:"Bash",cwd:$cwd,tool_input:{command:$c}}' \
+  | bash "$GATE" 2>/dev/null | jq -r '.hookSpecificOutput.permissionDecisionReason')"
+if [[ "$reason" == *spec*goldfish* && "$reason" == *"skipped: <reason>"* ]]; then echo "ok   - the denial names the stage, the tool and the way out"; else echo "FAIL - the denial names the stage, the tool and the way out ($reason)"; fail=1; fi
+
+# --- status: one line per feature in flight -----------------------------------
+S="$T/status"; mkdir -p "$S/docs/sdlc/bulk-export" "$S/docs/sdlc/sso-login" "$S/docs/sdlc/shipped"
+printf 'stages:\n  intent: {status: approved}\n  spec: {status: approved}\n  rfc: {status: skipped, reason: "x"}\n  plan: {status: approved}\n  build: {status: draft, owner: Sam}\n' > "$S/docs/sdlc/bulk-export/sdlc.yaml"
+printf '| 1 | A | done |\n| 2 | B | in_progress |\n| 3 | C | pending |\n' > "$S/docs/sdlc/bulk-export/plan.md"
+printf 'stages:\n  intent:\n    status: approved\n  spec:\n    status: draft\n    owner: Priya\n    approver: Lee\n' > "$S/docs/sdlc/sso-login/sdlc.yaml"
+{ echo 'stages:'; for s in intent spec rfc plan build test ship adr maintain; do echo "  $s: {status: approved}"; done; } > "$S/docs/sdlc/shipped/sdlc.yaml"
+out="$(CLAUDE_PROJECT_DIR="$S" bash "$GATE" status 2>&1 </dev/null)"
+expect() { if eval "$2"; then echo "ok   - $1"; else echo "FAIL - $1"; fail=1; fi; }
+expect "status names the stage a feature is at"            '[[ "$out" == *"bulk-export: at build"* && "$out" == *"sso-login: at spec"* ]]'
+expect "status counts the build phases that are done"      '[[ "$out" == *"1 of 3"* ]]'
+expect "status names the owner and the approver"           '[[ "$out" == *"Priya"* && "$out" == *"Lee"* ]]'
+expect "status leaves out a person the entry doesn't name"   '[[ "$(grep bulk-export <<<"$out")" == *"Owner Sam"* && "$(grep bulk-export <<<"$out")" != *pprover* ]]'
+expect "status leaves out a feature with every stage done" '[[ "$out" != *shipped* ]]'
+expect "status points at the sdlc skill"                   '[[ "$out" == *"sdlc skill"* ]]'
+expect "status prints nothing in a repo without the loop"  '[ -z "$(CLAUDE_PROJECT_DIR="$T/plain" bash "$GATE" status 2>&1 </dev/null)" ]'
+
 exit "$fail"

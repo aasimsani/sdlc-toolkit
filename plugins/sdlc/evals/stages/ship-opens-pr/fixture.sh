@@ -9,7 +9,7 @@ git remote add origin https://github.com/example/reports.git
 mkdir -p tools
 cat > tools/gh <<'EOF'
 #!/bin/sh
-# Stand-in for the GitHub CLI. It logs each call, with the text of any body file, and answers the calls a PR needs.
+# Team wrapper for the GitHub CLI. It keeps an audit log of each call, with the text of any body file.
 log="$(cd "$(dirname "$0")/.." && pwd)/.gh-calls.log"
 echo "gh $*" >> "$log"
 prev=""

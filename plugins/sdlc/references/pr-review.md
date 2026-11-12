@@ -41,3 +41,4 @@ When the spec is high-risk, ask the approver at Build whether to add a specialis
 2. Read its `## Summary` totals and `## Issues` table.
 3. Compare its fingerprints with the previous run's. A fingerprint that disappeared is **fixed**, one that appeared is **new**, and one in both runs is **open**.
 4. Deal with the **blocking findings**, which are the Critical and High ones. A stage can't finish while one is open. Fix each one, or record a won't-fix reason that the approver accepts. Medium and Low findings are the owner's call.
+5. Stop after two runs in a row that close no blocking finding. Show the approver what's still open, and run it again only if they say to.

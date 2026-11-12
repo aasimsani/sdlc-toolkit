@@ -60,18 +60,20 @@ description: One-time setup that prepares a repo, and this machine, for the /sdl
    - Generated files and lockfiles.
    ```
 
-4. **Directory READMEs (optional).** Offer to run `egm-bootstrap` on the repo root, or on the subtree the team owns, as `${CLAUDE_PLUGIN_ROOT}/references/egm.md` describes. It writes a `README.md` per directory. Goldfish reviewers read those as their baseline, and they're where architecture notes belong. It's a large run, so ask before starting.
+4. **Verification skill (optional).** The Test stage's verifier checks a feature by running the app. Offer to write a project skill at `.claude/skills/verify-<app>/`, so the verifier doesn't work out how to launch and drive the app each time. Its `SKILL.md` holds the commands that start the app, check that it's healthy, drive it and clean up. Its `features/` folder holds one short file per feature area, and each file answers four questions: what exists, how a user reaches it, how to drive it with those commands, and what misleads. Start with `SKILL.md` alone. The Test stage adds a feature file as each feature ships.
 
-5. **Artifact home.** Create `docs/sdlc/README.md` with one line saying that each subfolder holds one feature's artifacts and its `sdlc.yaml`.
+5. **Directory READMEs (optional).** Offer to run `egm-bootstrap` on the repo root, or on the subtree the team owns, as `${CLAUDE_PLUGIN_ROOT}/references/egm.md` describes. It writes a `README.md` per directory. Goldfish reviewers read those as their baseline, and they're where architecture notes belong. It's a large run, so ask before starting.
 
-6. **Gate hook (opt-in).** The loop has two rules that shouldn't depend on Claude following prose. Nothing commits on the default branch, and a human approves and merges each PR. Ask whether the user wants a hook that enforces both. If they say yes:
+6. **Artifact home.** Create `docs/sdlc/README.md` with one line saying that each subfolder holds one feature's artifacts and its `sdlc.yaml`.
+
+7. **Gate hook (opt-in).** The loop has three rules that shouldn't depend on Claude following prose. Nothing commits on the default branch, a human approves and merges each PR, and a stage is approved only when its `tools` are on record. Ask whether the user wants a hook that enforces them. If they say yes:
    - Copy `${CLAUDE_PLUGIN_ROOT}/scripts/sdlc-gate.sh` to `.claude/hooks/sdlc-gate.sh` and make it executable. The copy lives in the repo because the plugin's install path changes with each version. The script needs `jq`.
    - Merge this entry into `.claude/settings.json`, and keep any hooks already there:
      ```json
      {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/sdlc-gate.sh"}]}]}}
      ```
-   - Tell the user what it does. It denies `git commit` on the default branch. It makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run nobody can answer, so the ask becomes a denial.
+   - Tell the user what it does. It denies `git commit` on the default branch. It denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml`. It makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run nobody can answer, so the ask becomes a denial.
 
    Other guardrails are the team's choice, such as running the formatter after each edit or blocking edits to generated paths. Add them only if the user asks.
 
-7. **Commit.** Show the full diff, get approval, and commit it on a branch as `chore(sdlc): set up repo for the sdlc loop`, or the repo's equivalent.
+8. **Commit.** Show the full diff, get approval, and commit it on a branch as `chore(sdlc): set up repo for the sdlc loop`, or the repo's equivalent.

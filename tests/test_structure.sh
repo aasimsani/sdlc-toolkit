@@ -33,4 +33,21 @@ check "blocking findings are defined in one file ($(files_matching 'Critical (an
 check "the ponytail precedence rule is stated in one file ($(files_matching 'never overrides the loop|win over (it|ponytail)'))" \
   'once "never overrides the loop|win over (it|ponytail)"'
 
+# The tools table in stage-rules.md and the gate hook's own list must agree, because the hook is copied into
+# repos and can't read the plugin's files.
+tools_differ() {
+  local s row
+  for s in intent spec rfc plan build test ship adr maintain; do
+    row="$(grep -iE "^\| *$s *\|" "$P/references/stage-rules.md" | head -1 | cut -d'|' -f3 | tr -d '` ' | tr ',' ' ')"
+    [ "$row" = none ] && row=""
+    [ "$(echo $row)" = "$(bash "$P/scripts/sdlc-gate.sh" tools "$s" </dev/null)" ] || printf '%s ' "$s"
+  done
+}
+differ="$(tools_differ)"
+check "the tools table matches the gate hook (differ: ${differ:-none})" \
+  '[ -z "$differ" ] && [ -n "$(bash "$P/scripts/sdlc-gate.sh" tools build </dev/null)" ]'
+# The gate hook's own message repeats the format, so this counts the markdown files only.
+ledger_files="$(grep -rlE --exclude-dir=evals --include='*.md' 'skipped: <reason>' "$P" | sed "s|$P/||" | tr '\n' ' ')"
+check "the tool ledger's format is stated in one file ($ledger_files)" '[ "$(echo $ledger_files | wc -w | tr -d " ")" = 1 ]'
+
 exit "$fail"

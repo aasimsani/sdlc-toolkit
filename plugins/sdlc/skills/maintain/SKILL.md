@@ -54,6 +54,7 @@ When the input is `drift`, run two checks:
 - <stage> — <what happened>
 
 ## Changes proposed
+- [ ] Check: <lint rule, test or hook>
 - [ ] CLAUDE.md: <line>
 - [ ] REVIEW.md or skill <name>: <edit>
 - [ ] Eval: <case>

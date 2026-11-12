@@ -24,7 +24,7 @@ Feature: `$ARGUMENTS`
 
 5. **Run the agent evals if the diff changes them.** When the diff touches `CLAUDE.md`, `.claude/**` or skills, and the repo has an eval suite, run it and record the pass rate.
 
-6. **Write `docs/sdlc/<slug>/verify.md`** from the template. Every acceptance criterion needs evidence a reader can check, such as a test name, command output or a screenshot path.
+6. **Write `docs/sdlc/<slug>/verify.md`** from the template. Every acceptance criterion needs evidence a reader can check, such as a test name, command output or a screenshot path. When the repo has a verification skill, add or update its feature file for this feature on the same branch, so the next change to the feature is checked the same way.
 
 7. **Gate.** If any criterion fails, or the verifier sees behavior that doesn't match the plan, add a phase to `plan.md` for the failures and go back to `sdlc:build`. If everything passes, get approval and commit `verify.md`, the pr-review report and `sdlc.yaml` together.
 
