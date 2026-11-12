@@ -5,7 +5,7 @@ EGM is Google's Elephant-Goldfish Model plugin. Its Goldfish reviewers read a do
 ## Find EGM
 
 ```bash
-claude plugin list --json | jq -r '.[] | select(.enabled and (.id | startswith("egm@"))) | .installPath'
+claude plugin list --json | jq -r '.[] | select(.enabled and .id == "egm@egm") | .installPath'
 ```
 
 The command prints `EGM_ROOT`. If it prints nothing, EGM isn't installed or isn't enabled, so tell the user to run `sdlc:setup`. Never guess the path.

@@ -61,4 +61,13 @@ check "every tool the gate hook requires has its file defined (undefined: ${unde
 ledger_files="$(grep -rlE --exclude-dir=evals --include='*.md' 'skipped: <reason>' "$P" | sed "s|$P/||" | tr '\n' ' ')"
 check "the tool ledger's format is stated in one file ($ledger_files)" '[ "$(echo $ledger_files | wc -w | tr -d " ")" = 1 ]'
 
+# The stages call other plugins. plugins/sdlc-stack declares them, and Claude Code installs and tracks them from there.
+STACK="$(cd "$(dirname "$0")/.." && pwd)/plugins/sdlc-stack/.claude-plugin/plugin.json"
+# sdlc itself declares none, because a plugin with a missing dependency doesn't load, and then sdlc:setup can't run.
+check "the sdlc plugin loads without its dependencies" '[ "$(jq ".dependencies // [] | length" "$P/.claude-plugin/plugin.json")" = 0 ]'
+unlisted="$(jq -r '.dependencies[] | objects | "\(.name)@\(.marketplace)"' "$STACK" | while read -r id; do grep -qF "\`$id\`" "$P/skills/setup/SKILL.md" || printf '%s ' "$id"; done)"
+check "setup lists every plugin the stack depends on (unlisted: ${unlisted:-none})" '[ -n "$(jq -r ".dependencies[]" "$STACK")" ] && [ -z "$unlisted" ]'
+# A name prefix matched two pr-review plugins from different marketplaces, so a lookup names the full id.
+check "every plugin lookup names a full id ($(files_matching 'startswith\("[a-z-]+@"'))" '[ -z "$(files_matching "startswith\(\"[a-z-]+@\"")" ]'
+
 exit "$fail"

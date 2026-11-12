@@ -1,6 +1,6 @@
 # Running the formal-verification toolkit
 
-The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) settles a claim that says never, always, at most once or exactly once. A test checks the cases someone wrote. A model checker tries every ordering of the modelled steps, and a model finder tries every small structure. Its `formal-verification` skill triages the claims, picks one tool by the question, and runs the check. Invoke `fv-toolkit:formal-verification` with the Skill tool, and let it load the tool skills. The toolkit is optional, and `sdlc:setup` offers it.
+The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) settles a claim that says never, always, at most once or exactly once. A test checks the cases someone wrote. A model checker tries every ordering of the modelled steps, and a model finder tries every small structure. Its `formal-verification` skill triages the claims, picks one tool by the question, and runs the check. Invoke `fv-toolkit:formal-verification` with the Skill tool, and let it load the tool skills. `sdlc:setup` installs it with the rest of the stack.
 
 Most features have no such claim, and the skill's triage says so in one paragraph. That answer is a result. Record it as the skip reason and go on.
 

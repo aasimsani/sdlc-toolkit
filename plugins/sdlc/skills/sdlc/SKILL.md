@@ -26,7 +26,7 @@ Arguments: `$ARGUMENTS`
 
 ## Steps
 
-1. **Check the repo is set up.** The repo is ready when `CLAUDE.md` names one verify command, `REVIEW.md` exists at the root, and the `egm`, `pr-review`, `ponytail` and `testing-toolkit` plugins are enabled. Check the plugins with `claude plugin list --json`. If anything is missing, say what's missing and offer to run `sdlc:setup` first.
+1. **Check the repo is set up.** The repo is ready when `CLAUDE.md` names one verify command, `REVIEW.md` exists at the root, and the plugins the stages call are installed. Check with `claude plugin list --json`: the `sdlc-stack@sdlc-toolkit` entry is enabled and has no `errors`. If anything is missing, say what's missing and offer to run `sdlc:setup` first.
 
 2. **With no argument, show the status board.** Read every `docs/sdlc/*/sdlc.yaml`, fetching first so teammates' branches are included. Then print one row per feature that isn't closed.
 

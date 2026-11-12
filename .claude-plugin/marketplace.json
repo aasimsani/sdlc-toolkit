@@ -6,11 +6,23 @@
   "owner": {
     "name": "Aasim Sani"
   },
+  "allowCrossMarketplaceDependenciesOn": [
+    "egm",
+    "aasimsani-pr-review",
+    "ponytail",
+    "testing-toolkit",
+    "formal-verification-toolkit"
+  ],
   "plugins": [
     {
       "name": "sdlc",
       "source": "./plugins/sdlc",
       "description": "Runs a feature through intent, spec, plan, build, test, ship and maintain. Each stage ends by committing one artifact under docs/sdlc/<slug>/, and that commit starts the next stage."
+    },
+    {
+      "name": "sdlc-stack",
+      "source": "./plugins/sdlc-stack",
+      "description": "Installs sdlc with every plugin its stages call. Its manifest is the list of those plugins and the versions the loop needs."
     }
   ]
 }
