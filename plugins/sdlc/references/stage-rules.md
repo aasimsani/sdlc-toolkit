@@ -18,7 +18,7 @@ stages:
 - `owner` is the person who produces the artifact. `approver` is the person who must approve it. Ask for both at the start of a stage if they're unknown. Never invent a name. Write `unassigned` instead.
 - `artifact` is a path in the folder, or a URL when the artifact lives elsewhere, such as a Notion page.
 - `goldfish: skipped` with a `reason` records that the approver skipped the stage's Goldfish review.
-- An optional top-level `pr_review` block sets the feature's pr-review panel and lenses. `tools.md` describes it.
+- An optional top-level `pr_review` block sets the feature's pr-review panel and lenses. `pr-review.md` describes it.
 
 ## Three modes
 
@@ -42,8 +42,16 @@ Every stage ends with the same gate.
 ## Branches and history
 
 - Never commit on the default branch. Before the first commit for a feature, create a feature branch with the repo's branch-naming convention, and record it in `sdlc.yaml`.
+- A repo may have installed the gate hook that `sdlc:setup` offers. The hook denies a commit on the default branch, and it makes Claude Code ask the user before a PR is approved or merged. When the hook stops a command, do what its message says and don't route around it.
 - Earlier artifacts don't change silently. When a later stage finds that an earlier artifact is wrong, show the conflict. If the approver agrees, fix the earlier artifact in its own commit and set that stage back to `draft` until it's re-approved.
-- When Claude makes the same mistake twice in any stage, propose a one-line addition to the "Things Claude gets wrong" section of `CLAUDE.md`.
+- When Claude makes the same mistake twice in any stage, or a review finding repeats one from an earlier feature, propose a one-line addition to the "Things Claude gets wrong" section of `CLAUDE.md`.
+
+## When instructions overlap
+
+A session usually carries more instructions than this plugin's. The user's own instructions, the repo's `CLAUDE.md` and other workflow plugins all speak to the same work.
+
+- **The user's instructions and the repo's `CLAUDE.md` win** over a stage's steps and templates. Follow them and say that you did. Keep the artifact file names and the `sdlc.yaml` fields as they are, because other stages read them.
+- **Inside a stage, the stage is the workflow.** Superpowers, agent-skills and similar plugins define their own lifecycles, and some of their skills repeat what a stage already does. Before you invoke one, read `${CLAUDE_PLUGIN_ROOT}/references/companions.md`. It lists, stage by stage, which of their skills add something and which repeat the stage.
 
 ## Skipping stages
 

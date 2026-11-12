@@ -29,7 +29,7 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists.
+Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists, and it offers the gate hook.
 
 ## Use
 
@@ -42,6 +42,35 @@ Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](http
 | `… --review` | Runs as the stage's manager. Claude reviews someone else's artifact and records your decision without editing it. |
 | `/sdlc:maintain drift` | Checks every ADR against the current code, and audits the repo for over-engineering with `ponytail-audit`. |
 
+## How the text is organised
+
+Claude loads this plugin's text in layers, so a session only pays for what the current stage needs.
+
+| Layer | Files | Loaded |
+|---|---|---|
+| Skill descriptions | The frontmatter of each `skills/<stage>/SKILL.md` | In every session, about 1,500 tokens in total |
+| One stage | `skills/<stage>/SKILL.md`, with its steps and its artifact template | When that stage runs |
+| Rules every stage shares | `references/stage-rules.md` | At the start of each stage |
+| One tool | `references/egm.md`, `pr-review.md`, `ponytail.md`, `rfc-skill.md` | Only by the stages that use that tool |
+| Other workflow plugins | `references/companions.md` | Only when Claude is about to invoke a superpowers or agent-skills skill |
+
+Each rule that spans stages lives in one file, and `tests/test_structure.sh` fails if one gets copied into a second file. The loop's tone is plain on purpose. It names a small set of hard rules, and it leaves the rest to the model and to your own instructions, which win over a stage's steps and templates.
+
+## Gate hook
+
+Two rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers a hook for them. It copies [`scripts/sdlc-gate.sh`](plugins/sdlc/scripts/sdlc-gate.sh) into the repo's `.claude/hooks/` and registers it in `.claude/settings.json`.
+
+| Rule | What the hook does |
+|---|---|
+| Nothing commits on the default branch | Denies `git commit` there, and tells Claude to switch to the feature branch |
+| A human approves and merges each PR | Makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run the ask becomes a denial. |
+
+The hook is opt-in per repo, and it's a file the team can read and change. To gate another command, such as a production deploy, add a rule to the copy in the repo.
+
+## Other workflow plugins
+
+Superpowers and agent-skills define their own lifecycles, and some of their skills repeat what a stage already does. [`references/companions.md`](plugins/sdlc/references/companions.md) is a stage-by-stage table of which of their skills add something and which repeat the stage. Inside a stage, the stage is the workflow, and a companion skill supplies know-how for one step. Edit that table to add another plugin or to change a call.
+
 ## Extending
 
 Most extensions are a markdown file in the target repo or one line in `sdlc.yaml`. Plugin edits are needed only to change what a stage does.
@@ -52,19 +81,19 @@ pr-review gives each review one **panel**, which says who reviews, and any numbe
 
 | Where | Applies to | Example |
 |---|---|---|
-| The stage default in [`references/tools.md`](plugins/sdlc/references/tools.md) | Every feature | Build and Test add the ponytail lens. Ship adds none. |
+| The stage default in [`references/pr-review.md`](plugins/sdlc/references/pr-review.md) | Every feature | Build and Test add the ponytail lens. Ship adds none. |
 | The `pr_review` block in a feature's `sdlc.yaml` | One feature, with optional per-stage overrides | A red-team panel for an auth change |
 | `REVIEW.md` and `.pr-review/` in the target repo | Every review of that repo | A migrations lens for a repo with a database |
 
-The ponytail lens runs during Build and Test because cutting code is cheapest before review. Its SIMPLE findings are never High or Critical, so they suggest cuts without blocking a stage. It stays off the Ship review, so the human approver reads correctness findings without simplification nits. To change that, edit the stage defaults in `tools.md`, or set `ship: {lenses: [...]}` for one feature.
+The ponytail lens runs during Build and Test because cutting code is cheapest before review. Its SIMPLE findings are never High or Critical, so they suggest cuts without blocking a stage. It stays off the Ship review, so the human approver reads correctness findings without simplification nits. To change that, edit the stage defaults in `pr-review.md`, or set `ship: {lenses: [...]}` for one feature.
 
 ### Ponytail
 
-Ponytail runs at four points without anyone invoking it. Plan applies its ladder to every file, dependency and option the plan adds. Build turns on ponytail mode before the first phase. Build and Test pass its lens to pr-review. `/sdlc:maintain drift` runs `ponytail-audit`. The plan's tests and the spec's requirements always win over ponytail. To change where it runs, edit the Run ponytail table in [`references/tools.md`](plugins/sdlc/references/tools.md).
+Ponytail runs at four points without anyone invoking it. Plan applies its ladder to every file, dependency and option the plan adds. Build turns on ponytail mode before the first phase. Build and Test pass its lens to pr-review. `/sdlc:maintain drift` runs `ponytail-audit`. The plan's tests and the spec's requirements always win over ponytail. To change where it runs, edit the table in [`references/ponytail.md`](plugins/sdlc/references/ponytail.md).
 
 ### Document reviewers (EGM)
 
-The table in [`references/tools.md`](plugins/sdlc/references/tools.md) says which EGM skill, reviewers and standards each stage uses.
+The table in [`references/egm.md`](plugins/sdlc/references/egm.md) says which EGM skill, reviewers and standards each stage uses.
 
 - **Swap or add a reviewer.** Change a stage's `Reviewers` list. EGM ships `egm-design`, `egm-codebase-details`, `egm-comprehension`, `egm-implementation-readiness`, `egm-structural`, `egm-style`, `egm-zoom-out` and `egm-inventive-catalyst`.
 - **Add a standard.** `egm-review-loop` takes a standard's short name or a path. Write a team standard as a markdown file, for example `docs/sdlc/standards/api-standard.md`, and map a reviewer to its path in the stage's `Standards`.
@@ -78,7 +107,7 @@ The Spec stage applies every policy skill in the session, such as security, comp
 
 - **Change an artifact's shape.** Edit the template at the bottom of the stage's `SKILL.md`.
 - **Add a stage.** Add `plugins/sdlc/skills/<stage>/SKILL.md` that reads `references/stage-rules.md` and ends with its gate. Then add a row to the stage table in `skills/sdlc/SKILL.md`, which the router reads in order.
-- **Swap a tool.** Each stage names its tools in `references/tools.md`. For example, the RFC stage uses the `rfc` skill when it's installed, and `egm-draft` when it isn't.
+- **Swap a tool.** Each tool has its own file under `references/`, and each stage names the ones it uses in its first paragraph. For example, the RFC stage uses the `rfc` skill when it's installed, and `egm-draft` when it isn't.
 
 After editing the plugin, bump `version` in `plugins/sdlc/.claude-plugin/plugin.json` and run `claude plugin update sdlc@sdlc-toolkit`.
 
@@ -89,6 +118,8 @@ The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start seve
 ## Develop
 
 ```bash
+bash tests/test_gate.sh               # the gate hook's decisions, in throwaway repos
+bash tests/test_structure.sh          # every referenced file exists, and each shared rule lives in one file
 claude plugin validate plugins/sdlc
 claude --plugin-dir plugins/sdlc      # try local edits without reinstalling
 claude plugin update sdlc@sdlc-toolkit

@@ -6,7 +6,7 @@ argument-hint: "<slug> | <incident description> | drift"
 
 # Stage 9 — Maintain
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` and `${CLAUDE_PLUGIN_ROOT}/references/tools.md` first.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md` and `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md`.
 
 Maintain closes the loop. Whatever goes wrong after release becomes a new intent and starts again at stage 1.
 
@@ -21,7 +21,7 @@ Input: `$ARGUMENTS`
 3. **Write `docs/sdlc/<slug>/lessons.md`** from the template.
 
 4. **Turn the lessons into changes:**
-   - When Claude made a mistake twice, propose a `CLAUDE.md` line.
+   - Check the whole feature against the repeated-mistake rule in `stage-rules.md`.
    - When pr-review found a policy gap, propose an edit to the policy's skill or to `REVIEW.md`, and the policy owner signs it off.
    - When the repo has an agent eval suite, propose this feature's task as a new eval case.
    - Any follow-up work becomes a new feature. Run `sdlc:intent` for it, and record `from: <slug>` in its `sdlc.yaml`.

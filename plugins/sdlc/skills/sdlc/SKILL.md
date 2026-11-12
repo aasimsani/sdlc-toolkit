@@ -39,7 +39,7 @@ Arguments: `$ARGUMENTS`
    - If the argument matches a folder in `docs/sdlc/`, use that feature.
    - If the argument is a sentence, treat it as a new idea. Derive a short kebab-case slug, confirm it, and create `sdlc.yaml`.
 
-4. **Find the stage.** It's the first stage in the table whose status isn't `approved` or `skipped`. A feature whose Build items are all checked but whose `verify.md` is missing is at Test. A feature with every stage done is closed. Say so and stop.
+4. **Find the stage.** It's the first stage in the table whose status isn't `approved` or `skipped`. A feature with every stage done is closed, so say so and stop. For a feature at Build, count the phases in `plan.md` that are `done`, so the report can say how far along it is.
 
 5. **Report and run.** Tell the user in one line where the feature is and who it's waiting on, for example "`bulk-export` is at Plan. The plan is a draft owned by Priya and needs Aasim's approval." Then invoke the stage skill with the Skill tool, passing the slug and any `--adopt` or `--review` flag.
 
