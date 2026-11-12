@@ -411,15 +411,18 @@ The last full run was on 2026-11-12. It tested plugin version 0.6.0 on Claude Co
 
 The run's [report](docs/evals/2026-11-12-sonnet-5-5/report.html) shows every grader's verdict for every run, and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5/aggregate-result.json) holds the same data. Both files are as `claude plugin eval` wrote them, except that the home directory in two paths is shortened to `~`. The run cost $12.98 at list price.
 
-Version 0.7.0 changed the Build and Test stages, so the three cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. The other fourteen rows above are from the 0.6.0 run. The testing toolkit isn't loaded in an eval run, so this rerun shows only that the two stages behave as before without it.
+Version 0.7.0 changed the Plan, Build and Test stages, so the four cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. The other thirteen rows above are from the 0.6.0 run. The testing toolkit isn't loaded in an eval run, so this rerun shows only that the three stages behave as before without it.
 
 | Case | With plugin | Without | Runs that invoked a skill |
 |---|---|---|---|
-| `stages/build-one-phase` | 0.93 | 0.79 | 3 of 3 |
-| `stages/test-catches-bug` | 1.00 | 0.92 | 3 of 3 |
+| `stages/plan-from-rfc` | 1.00 | 0.83 | 3 of 3 |
+| `stages/build-one-phase` | 0.93 | 0.93 | 3 of 3 |
+| `stages/test-catches-bug` | 1.00 | 0.86 | 3 of 3 |
 | `build/next-phase-todos` | 1.00 | 1.00 | 3 of 3 |
 
-That rerun's [report](docs/evals/2026-11-12-sonnet-5-5-build-and-test-0.7.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-build-and-test-0.7.0/aggregate-result.json) are stored the same way. It cost $2.34 at list price.
+One unscored indicator moved. The Test case dispatched the `verifier` subagent in one of its three plugin runs, against two of three on 0.6.0, and all three runs still failed the right criterion. Three runs are too few to say whether the longer Test stage caused that.
+
+That rerun's [report](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/aggregate-result.json) are stored the same way. It cost $3.80 at list price.
 
 Two things help when reading the tables:
 
