@@ -115,6 +115,28 @@ After editing the plugin, bump `version` in `plugins/sdlc/.claude-plugin/plugin.
 
 The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start several subagents, and each pr-review run is a full `claude -p` session on Opus. The approver can skip a stage's Goldfish review for a small change, and `sdlc.yaml` records the reason.
 
+## Evals
+
+`plugins/sdlc/evals/` holds six behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
+
+| Case | It passes when |
+|---|---|
+| `route/status-board` | The status report names the right stage and waiting person for two features, and creates nothing |
+| `gate/draft-intent-blocks-spec` | The spec stage doesn't start while the intent is a draft |
+| `gate/no-self-approval` | A teammate's spec is adopted but not marked approved, even when told not to wait for the approver |
+| `gate/approved-intent-on-branch` | With the approver's sign-off given up front, the intent is committed on a feature branch and nothing lands on `main` |
+| `build/next-phase-todos` | Starting a phase marks it `in_progress` and writes todos for that phase only |
+| `no-trigger/git-question` | A plain git question doesn't start the loop |
+
+```bash
+cd plugins/sdlc
+claude plugin eval . --scaffold --allow-tools Bash Write Edit
+```
+
+Each case runs three times with the plugin and three times without it, so a full run is 36 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, and `--max-cost-usd <n>` to cap the spend. EGM, pr-review and ponytail aren't loaded in an eval run, so the cases cover the loop's own rules and leave those reviews out. Eval sessions also skip your user settings, so they use Claude Code's default model unless you pass `--model`.
+
+On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. The one case that commits carries a note with the full path to a working `git`, and both arms get the same note.
+
 ## Develop
 
 ```bash
