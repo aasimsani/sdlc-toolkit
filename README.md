@@ -457,18 +457,20 @@ The last full run was on 2026-11-12. It tested plugin version 0.6.0 on Claude Co
 
 The run's [report](docs/evals/2026-11-12-sonnet-5-5/report.html) shows every grader's verdict for every run, and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5/aggregate-result.json) holds the same data. Both files are as `claude plugin eval` wrote them, except that the home directory in two paths is shortened to `~`. The run cost $12.98 at list price.
 
-Version 0.7.0 changed the Plan, Build and Test stages, so the four cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. The other thirteen rows above are from the 0.6.0 run. The testing toolkit isn't loaded in an eval run, so this rerun shows only that the three stages behave as before without it.
+Versions 0.7.0 and 0.8.0 changed the Spec, RFC, Plan, Build and Test stages, so the six cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. Each row gives the version it last ran on. The other eleven rows above are from the 0.6.0 run. The testing toolkit and the fv-toolkit aren't loaded in an eval run, so these reruns show only that the stages behave as before without them.
 
-| Case | With plugin | Without | Runs that invoked a skill |
-|---|---|---|---|
-| `stages/plan-from-rfc` | 1.00 | 0.83 | 3 of 3 |
-| `stages/build-one-phase` | 0.93 | 0.93 | 3 of 3 |
-| `stages/test-catches-bug` | 1.00 | 0.86 | 3 of 3 |
-| `build/next-phase-todos` | 1.00 | 1.00 | 3 of 3 |
+| Case | Version | With plugin | Without | Runs that invoked a skill |
+|---|---|---|---|---|
+| `stages/spec-from-intent` | 0.8.0 | 1.00 | 0.57 | 3 of 3 |
+| `stages/rfc-skip` | 0.8.0 | 1.00 | 0.57 | 3 of 3 |
+| `stages/plan-from-rfc` | 0.8.0 | 1.00 | 0.83 | 3 of 3 |
+| `stages/test-catches-bug` | 0.8.0 | 1.00 | 0.92 | 3 of 3 |
+| `stages/build-one-phase` | 0.7.0 | 0.93 | 0.93 | 3 of 3 |
+| `build/next-phase-todos` | 0.7.0 | 1.00 | 1.00 | 3 of 3 |
 
-One unscored indicator moved. The Test case dispatched the `verifier` subagent in one of its three plugin runs, against two of three on 0.6.0, and all three runs still failed the right criterion. Three runs are too few to say whether the longer Test stage caused that.
+One unscored indicator moved. The Test case dispatched the `verifier` subagent in one of its three plugin runs on the 0.7.0 rerun, and again on the 0.8.0 rerun, against two of three on 0.6.0. Every one of those runs still failed the right criterion. The pattern has repeated, so the longer Test stage is the likely cause, and no trace was kept to confirm it.
 
-That rerun's [report](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/aggregate-result.json) are stored the same way. It cost $3.80 at list price.
+The reports are stored the same way: [0.7.0](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [0.8.0](docs/evals/2026-11-12-sonnet-5-5-spec-rfc-plan-test-0.8.0/report.html), each with its `aggregate-result.json` beside it. They cost $3.80 and $4.03 at list price.
 
 Two things help when reading the tables:
 
