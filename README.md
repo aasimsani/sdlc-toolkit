@@ -1,6 +1,6 @@
 # sdlc-toolkit
 
-A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes each one before the code in Build, and checks them in Test.
+A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes the ones that drive the code in Build, and writes the final ones, checks them all and audits the suite in Test.
 
 ```
 intent → spec → RFC → plan → build → test → ship → ADR → maintain
@@ -15,7 +15,7 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | `egm-review`, then `egm-resolve` |
 | 4 | Plan | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation-readiness stage |
 | 5 | Build | code + tests, each test written before the code it tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `verify.md` | The testing toolkit's check of the tests, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
+| 6 | Test | `verify.md` | The testing toolkit's final tests, check and audit, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
 | 9 | Maintain | `lessons.md` | `egm-drift-report`, `ponytail-audit` + live signals |
@@ -76,15 +76,15 @@ flowchart TB
     end
     subgraph S4["4 · Plan"]
         direction LR
-        d0["sdlc:plan<br/>plan.md"]:::stage --> d1["testing toolkit<br/>decides the tests, with a kind of test for each component"]:::tt --> d2["ponytail ladder<br/>removes each file, dependency and option the plan doesn't need"]:::pony --> d3["EGM egm-review<br/>checks that a stranger could build from the plan"]:::egm
+        d0["sdlc:plan<br/>plan.md"]:::stage --> d1["testing toolkit<br/>decides the tests, and which stage writes each one"]:::tt --> d2["ponytail ladder<br/>removes each file, dependency and option the plan doesn't need"]:::pony --> d3["EGM egm-review<br/>checks that a stranger could build from the plan"]:::egm
     end
     subgraph S5["5 · Build"]
         direction LR
-        e0["sdlc:build<br/>code and tests"]:::stage --> e1["ponytail mode<br/>keeps each edit the smallest that works"]:::pony --> e2["testing toolkit<br/>writes each planned test first, then proves that it can fail"]:::tt --> e3["pr-review --local<br/>a fresh session reviews each phase's commits"]:::prr
+        e0["sdlc:build<br/>code and tests"]:::stage --> e1["ponytail mode<br/>keeps each edit the smallest that works"]:::pony --> e2["testing toolkit<br/>writes each Build test first, then proves that it can fail"]:::tt --> e3["pr-review --local<br/>a fresh session reviews each phase's commits"]:::prr
     end
     subgraph S6["6 · Test"]
         direction LR
-        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>checks the tests against the plan, and writes missing ones"]:::tt --> f2["verifier subagent<br/>runs the app against each criterion, and fixes nothing"]:::own --> f3["pr-review --local<br/>a fresh session reviews the whole branch"]:::prr
+        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>writes the final tests, checks Build's tests, then audits the suite with test-audit"]:::tt --> f2["verifier subagent<br/>runs the app against each criterion, and fixes nothing"]:::own --> f3["pr-review --local<br/>a fresh session reviews the whole branch"]:::prr
     end
     subgraph S7["7 · Ship"]
         direction LR
@@ -107,7 +107,7 @@ flowchart TB
 |---|---|---|
 | 🟦 | [EGM](https://github.com/google/elephant-goldfish-model) | Goldfish reviewers read each document with no memory of the conversation that produced it |
 | 🟥 | The `rfc` skill | Writes the RFC, and later the ADR, as an HTML page a reviewer can read |
-| 🟩 | [Testing toolkit](https://github.com/aasimsani/testing-toolkit) | Decides the tests in Plan, writes each one before the code in Build, and checks them in Test |
+| 🟩 | [Testing toolkit](https://github.com/aasimsani/testing-toolkit) | Decides the tests in Plan, writes the Build tests before the code, and in Test writes the final tests, checks them all and audits the suite |
 | 🟨 | [ponytail](https://github.com/DietrichGebert/ponytail) | Keeps the plan and the code as small as they can be |
 | 🟪 | [pr-review](https://github.com/aasimsani/pr-review) | Reviews code in a fresh session that has none of the build session's context |
 | ⬜ | This plugin, or whatever the session has | The `verifier` subagent is this plugin's own. Policy skills and observability tools come from the session. |
@@ -171,7 +171,7 @@ A phase in `plan.md` is `pending`, `in_progress` or `done`. Inside a phase the o
 flowchart TB
     pending([pending]) -- "Build picks the phase and writes its todos" --> red
     subgraph ip["in_progress"]
-        red["Red<br/>The testing toolkit writes the tests the plan chose, and each one fails for the expected reason."]
+        red["Red<br/>The testing toolkit writes the phase's Build tests, and each one fails for the expected reason."]
         green["Green<br/>The smallest code that makes them pass is written, and the verify command passes."]
         proven["Proven<br/>Each test gives the same result over five runs, and fails on a planted bug."]
         review["Review<br/>pr-review --local reads the phase's commits in a fresh session."]
@@ -193,23 +193,26 @@ flowchart TB
 
 ### The life of one test
 
-This one is implicit. No file tracks a test's state, but each test passes through three stages, and the plan's Tests section is what they share.
+This one is implicit. No file tracks a test's state, but each test passes through up to three stages, and the plan's Tests section is what they share. A Build test drives one phase's code. A final test, such as an end-to-end or a load test, waits until the whole feature is on the branch.
 
 ```mermaid
 stateDiagram-v2
     state "Chosen, as a row in plan.md" as Chosen
-    state "Missing from the plan" as Missing
-    [*] --> Chosen: Plan decides it
-    Chosen --> Failing: Build writes it before the code
+    state "Written in the Test stage" as Late
+    [*] --> Chosen: Plan decides it, and which stage writes it
+    Chosen --> Failing: a Build test is written before the code
     Failing --> Passing: the phase's code is written
     Passing --> Proven: five identical runs, and a failure on a planted bug
     Passing --> Dropped: it fails one of those checks
-    Dropped --> [*]: plan.md is updated in the same commit
     Proven --> Checked: Test compares it with the plan
-    Checked --> [*]: evidence in verify.md
-    [*] --> Missing: Test finds changed code that no test checks
-    Missing --> Checked: the toolkit writes the test, and it passes
-    Missing --> Failing: it fails on the code, so Build gets a new phase
+    Chosen --> Late: a final test waits for the whole feature
+    [*] --> Late: Test finds changed code that no test checks
+    Late --> Checked: it passes
+    Late --> Failing: it fails on the code, so Build gets a new phase
+    Checked --> Kept: the audit finds a regression only it catches
+    Checked --> Dropped: the audit finds a stronger test for the same contract
+    Kept --> [*]: evidence in verify.md
+    Dropped --> [*]: plan.md is updated in the same commit
 ```
 
 ### What one feature changes for the next
@@ -297,15 +300,25 @@ Ponytail runs at four points without anyone invoking it. Plan applies its ladder
 
 ### Tests (testing toolkit)
 
-Build is test first, so the tests are decided before any code exists. The toolkit's `testing` skill does one job in three stages:
+Build is test first, so the tests are decided before any code exists. Build and Test need different kinds of test, so the plan sorts each one into a set:
 
-| Stage | What the skill does | Where the result goes |
+| | Build tests | Final tests |
 |---|---|---|
-| Plan | Classifies the change and picks a kind of test for each component. It writes no test. | The Tests section of `plan.md` |
-| Build | Writes each phase's planned tests before the code. After the phase is green, it proves that each test is stable and fails on a planted bug. | `testing/build.md` |
-| Test | Checks the tests against the plan, finds changed code that no test checks, and writes the missing tests | `testing/test.md` |
+| What they're for | Each one drives one phase's code | Each one checks the feature once every phase is on the branch |
+| Kinds that usually fit | Unit, integration, the consumer side of a contract, characterization | End-to-end, load, fuzz, a long property run, mutation and diff coverage |
+| Written | In Build, before the code | In Test |
+| When one fails | The phase isn't done | The feature goes back to Build as a new phase |
 
-The stages call only that skill, and it chooses the toolkit's other skills. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to it and where the loop's order wins over the toolkit's. Without the toolkit, Plan chooses the tests itself, Build writes them itself, Test skips the check, and `sdlc.yaml` records each skip.
+The toolkit's `testing` skill does one job across three stages, and its `test-audit` skill closes the Test stage's work on the tests:
+
+| Stage | What the toolkit does | Where the result goes |
+|---|---|---|
+| Plan | Classifies the change and picks a kind of test for each component. It writes no test. | The Tests section of `plan.md`, with the stage that writes each test |
+| Build | Writes each phase's Build tests before the code. After the phase is green, it proves that each test is stable and fails on a planted bug. | `testing/build.md` |
+| Test | Writes and runs the final tests, checks Build's tests against the plan, and writes a test for changed code that has none | `testing/test.md` |
+| Test, last | `test-audit` removes or merges a test only when a stronger one covers the same contract | `testing/audit.md` |
+
+The audit is the stage's last change to the tests. It runs before the verify command, the verifier and the final pr-review, so their evidence describes the suite that ships. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to the toolkit and where the loop's order wins over the toolkit's. Without the toolkit, each stage does its own part by hand, Test skips the check and the audit, and `sdlc.yaml` records each skip.
 
 ### Document reviewers (EGM)
 
