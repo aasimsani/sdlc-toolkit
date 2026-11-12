@@ -51,8 +51,8 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 | Spec | `goldfish` |
 | RFC | `rfc-skill`, `goldfish` |
 | Plan | `goldfish` |
-| Build | `ponytail`, `pr-review` |
-| Test | `verifier`, `pr-review` |
+| Build | `ponytail`, `testing`, `pr-review` |
+| Test | `testing`, `verifier`, `pr-review` |
 | Ship | `pr-review` |
 | ADR | `goldfish` |
 | Maintain | none |
@@ -60,6 +60,7 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 - `goldfish` is the stage's EGM review, and its file is the report under `egm/`.
 - `rfc-skill` is the `rfc` skill, and its file is `rfc.src.html`.
 - `ponytail` is ponytail mode during Build. It writes no file of its own, so its file is the last Build pr-review report, whose ponytail lens checked the code.
+- `testing` is the testing toolkit's `testing` skill, and its file is the stage's report under `testing/`.
 - `pr-review` is the stage's last report under `pr-review/`.
 - `verifier` is the verifier subagent, and its file is `verify.md`, which holds its report.
 

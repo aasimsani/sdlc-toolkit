@@ -1,7 +1,7 @@
 {
   "name": "sdlc",
   "description": "AI-native SDLC loop based on Anthropic's AI-Native SDLC Playbook. /sdlc shows which stage each feature is at and runs the next one: intent, spec, RFC, plan, build, test, ship, ADR, maintain. Every stage commits a version-controlled artifact under docs/sdlc/<slug>/. EGM Goldfish reviews check the documents, and pr-review checks the code.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": {
     "name": "Aasim Sani"
   }

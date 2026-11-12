@@ -46,6 +46,17 @@ tools_differ() {
 differ="$(tools_differ)"
 check "the tools table matches the gate hook (differ: ${differ:-none})" \
   '[ -z "$differ" ] && [ -n "$(bash "$P/scripts/sdlc-gate.sh" tools build </dev/null)" ]'
+# The ledger maps each tool to the file it leaves, so each tool the hook requires needs a line that names that file.
+undefined_tools() {
+  local s t
+  for s in intent spec rfc plan build test ship adr maintain; do
+    for t in $(bash "$P/scripts/sdlc-gate.sh" tools "$s" </dev/null); do
+      grep -q "^- \`$t\` is " "$P/references/stage-rules.md" || echo "$t"
+    done
+  done | sort -u | tr '\n' ' '
+}
+undefined="$(undefined_tools)"
+check "every tool the gate hook requires has its file defined (undefined: ${undefined:-none})" '[ -z "$undefined" ]'
 # The gate hook's own message repeats the format, so this counts the markdown files only.
 ledger_files="$(grep -rlE --exclude-dir=evals --include='*.md' 'skipped: <reason>' "$P" | sed "s|$P/||" | tr '\n' ' ')"
 check "the tool ledger's format is stated in one file ($ledger_files)" '[ "$(echo $ledger_files | wc -w | tr -d " ")" = 1 ]'

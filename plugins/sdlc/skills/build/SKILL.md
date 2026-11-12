@@ -1,12 +1,12 @@
 ---
 name: build
-description: SDLC stage 5. Implements an approved docs/sdlc/<slug>/plan.md phase by phase in ponytail mode, test first, with a verify loop and a pr-review --local run at the end of each phase. Use when the user runs /sdlc:build or the sdlc skill routes here.
+description: SDLC stage 5. Implements an approved docs/sdlc/<slug>/plan.md phase by phase in ponytail mode, test first with the testing toolkit, with a verify loop and a pr-review --local run at the end of each phase. Use when the user runs /sdlc:build or the sdlc skill routes here.
 argument-hint: "<slug> [phase]"
 ---
 
 # Stage 5 — Build
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/pr-review.md` and `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/pr-review.md`, `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md` and `${CLAUDE_PLUGIN_ROOT}/references/testing-toolkit.md`.
 
 The engineer already approved the plan, so Claude works through it without asking about each edit. A session checks and fixes its own work before anyone else sees it. Because pr-review reads the code without this session's context, it catches what the session talked itself into.
 
@@ -23,11 +23,11 @@ Feature: `$ARGUMENTS`
 
 1. **Pick the phase.** Take the phase that's `in_progress` in the plan's Phases table. If it has a `Resume:` line, start from there and don't redo a checked todo. If no phase is in progress, take the first `pending` phase whose dependencies are `done`, or the phase the user named. Set it to `in_progress` and write its todos under `## Todos`.
 
-2. **Test first.** Write the failing test, run it, and confirm it fails for the expected reason. Commit the test.
+2. **Test first.** Invoke `testing-toolkit:testing` for the phase, with the inputs and overrides in `testing-toolkit.md`. It picks the kinds of test the phase needs and writes them from the spec. Without the toolkit, write the failing test yourself. Run the tests, confirm each one fails for the expected reason, and commit them.
 
 3. **Make it pass.** Write the smallest change that makes the test pass, and don't edit the test to make it pass. If the test itself is wrong, stop and tell the user.
 
-4. **Refactor and verify.** Run the verify command and paste the last lines of its output. A phase isn't done until the verify command passes.
+4. **Refactor and verify.** Run the verify command and paste the last lines of its output. A phase isn't done until the verify command passes. Then let the testing skill finish its checks on the phase's tests, and save its report.
 
 5. **Review with pr-review.** Commit, then run `pr-review --local` with the ponytail lens and the feature's perspectives, as `pr-review.md` describes. Apply the SIMPLE cuts the owner agrees with now, while the code is cheap to change. Fix the blocking findings, commit the fixes, and run it again until none is open. Report what's fixed, new and still open.
 

@@ -16,8 +16,8 @@ Each stage ends by committing one artifact, and that commit starts the next stag
 | 2 | Spec | `sdlc:spec` | `spec.md` | `egm-review-loop` |
 | 3 | RFC | `sdlc:rfc` | `rfc.src.html` + `rfc.html` | `egm-review`, then `egm-resolve` |
 | 4 | Plan | `sdlc:plan` | `plan.md` | `egm-review` implementation stage |
-| 5 | Build | `sdlc:build` | code + tests | ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `sdlc:test` | `verify.md` | `verifier` subagent + final `pr-review --local` with the ponytail lens |
+| 5 | Build | `sdlc:build` | code + tests, picked by the testing toolkit | ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
+| 6 | Test | `sdlc:test` | `verify.md` | the testing toolkit's check of the tests, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | `sdlc:ship` | PR + `review.md` | `pr-review --repo --pr`, then a human |
 | 8 | ADR | `sdlc:adr` | `adr.src.html` + `adr.html` (a copy of the RFC, updated to what shipped) | `egm-drift-report` |
 | 9 | Maintain | `sdlc:maintain` | `lessons.md` | `egm-drift-report`, `ponytail-audit`, live signals |
@@ -26,7 +26,7 @@ Arguments: `$ARGUMENTS`
 
 ## Steps
 
-1. **Check the repo is set up.** The repo is ready when `CLAUDE.md` names one verify command, `REVIEW.md` exists at the root, and the `egm`, `pr-review` and `ponytail` plugins are enabled. Check the plugins with `claude plugin list --json`. If anything is missing, say what's missing and offer to run `sdlc:setup` first.
+1. **Check the repo is set up.** The repo is ready when `CLAUDE.md` names one verify command, `REVIEW.md` exists at the root, and the `egm`, `pr-review`, `ponytail` and `testing-toolkit` plugins are enabled. Check the plugins with `claude plugin list --json`. If anything is missing, say what's missing and offer to run `sdlc:setup` first.
 
 2. **With no argument, show the status board.** Read every `docs/sdlc/*/sdlc.yaml`, fetching first so teammates' branches are included. Then print one row per feature that isn't closed.
 

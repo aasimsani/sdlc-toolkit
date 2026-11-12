@@ -1,6 +1,6 @@
 # sdlc-toolkit
 
-A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code.
+A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) picks the kinds of test each change needs and writes them from the spec.
 
 ```
 intent → spec → RFC → plan → build → test → ship → ADR → maintain
@@ -14,8 +14,8 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 2 | Spec | `spec.md` | `egm-review-loop` with the feature-spec standard |
 | 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | `egm-review`, then `egm-resolve` |
 | 4 | Plan | `plan.md` | `egm-review` implementation-readiness stage |
-| 5 | Build | code + tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `verify.md` | `verifier` subagent + final `pr-review --local` with the ponytail lens |
+| 5 | Build | code + tests, which the testing toolkit picks and writes | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
+| 6 | Test | `verify.md` | The testing toolkit's check of the tests, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
 | 9 | Maintain | `lessons.md` | `egm-drift-report`, `ponytail-audit` + live signals |
@@ -29,7 +29,7 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
+Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https://github.com/DietrichGebert/ponytail) and the testing toolkit if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
 
 ## Use
 
@@ -52,7 +52,7 @@ Claude loads this plugin's text in layers, so a session only pays for what the c
 | Skill descriptions | The frontmatter of each `skills/<stage>/SKILL.md` | In every session, about 1,500 tokens in total |
 | One stage | `skills/<stage>/SKILL.md`, with its steps and its artifact template | When that stage runs |
 | Rules every stage shares | `references/stage-rules.md` | At the start of each stage |
-| One tool | `references/egm.md`, `pr-review.md`, `ponytail.md`, `rfc-skill.md` | Only by the stages that use that tool |
+| One tool | `references/egm.md`, `pr-review.md`, `ponytail.md`, `testing-toolkit.md`, `rfc-skill.md` | Only by the stages that use that tool |
 | Other workflow plugins | `references/companions.md` | Only when Claude is about to invoke a superpowers or agent-skills skill |
 
 Each rule that spans stages lives in one file, and `tests/test_structure.sh` fails if one gets copied into a second file. The loop's tone is plain on purpose. It names a small set of hard rules, and it leaves the rest to the model and to your own instructions, which win over a stage's steps and templates.
@@ -67,7 +67,7 @@ Three rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers 
 | A human approves and merges each PR | Makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run the ask becomes a denial. |
 | A stage is approved only with its tools on record | Denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml` |
 
-Each stage has a short list of tools it must account for, such as the Goldfish review, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason.
+Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason.
 
 The hook is opt-in per repo, and it's a file the team can read and change. To gate another command, such as a production deploy, add a rule to the copy in the repo.
 
@@ -94,6 +94,10 @@ The ponytail lens runs during Build and Test because cutting code is cheapest be
 ### Ponytail
 
 Ponytail runs at four points without anyone invoking it. Plan applies its ladder to every file, dependency and option the plan adds. Build turns on ponytail mode before the first phase. Build and Test pass its lens to pr-review. `/sdlc:maintain drift` runs `ponytail-audit`. The plan's tests and the spec's requirements always win over ponytail. To change where it runs, edit the table in [`references/ponytail.md`](plugins/sdlc/references/ponytail.md).
+
+### Tests (testing toolkit)
+
+Build invokes the toolkit's `testing` skill at each phase's test-first step, and Test invokes it once on the whole branch. That skill classifies the change and picks the kinds of test, so the stages name no kind of test themselves. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to the skill, and where the loop's order wins over the toolkit's. For example, a Build test is written before the code, so the toolkit's checks that need passing code run after the phase is green. Each stage saves the skill's report under `testing/` in the feature folder. Without the toolkit, Build writes its own failing test, Test skips the check, and `sdlc.yaml` records the skip.
 
 ### Document reviewers (EGM)
 
@@ -155,7 +159,7 @@ Each case runs three times with the plugin and three times without it, so a full
 
 The suite has three limits:
 
-- EGM, pr-review, ponytail and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run or a written RFC.
+- EGM, pr-review, ponytail, the testing toolkit and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run, the testing toolkit's choice of tests or a written RFC.
 - The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 

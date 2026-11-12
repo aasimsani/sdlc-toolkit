@@ -25,8 +25,8 @@ required_tools() {
   case "$1" in
     intent|spec|plan|adr) echo "goldfish" ;;
     rfc)   echo "rfc-skill goldfish" ;;
-    build) echo "ponytail pr-review" ;;
-    test)  echo "verifier pr-review" ;;
+    build) echo "ponytail testing pr-review" ;;
+    test)  echo "testing verifier pr-review" ;;
     ship)  echo "pr-review" ;;
   esac
 }
