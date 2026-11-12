@@ -1,6 +1,6 @@
 # sdlc-toolkit
 
-A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) picks the kinds of test each change needs and writes them from the spec.
+A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes each one before the code in Build, and checks them in Test.
 
 ```
 intent → spec → RFC → plan → build → test → ship → ADR → maintain
@@ -13,8 +13,8 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 1 | Intent | `intent.md` | `egm-brainstorm` (seven Goldfish lenses) |
 | 2 | Spec | `spec.md` | `egm-review-loop` with the feature-spec standard |
 | 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | `egm-review`, then `egm-resolve` |
-| 4 | Plan | `plan.md` | `egm-review` implementation-readiness stage |
-| 5 | Build | code + tests, which the testing toolkit picks and writes | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
+| 4 | Plan | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation-readiness stage |
+| 5 | Build | code + tests, each test written before the code it tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
 | 6 | Test | `verify.md` | The testing toolkit's check of the tests, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
@@ -42,6 +42,174 @@ Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https:/
 | `… --review` | Runs as the stage's manager. Claude reviews someone else's artifact and records your decision without editing it. |
 | `/sdlc:maintain drift` | Checks every ADR against the current code, and audits the repo for over-engineering with `ponytail-audit`. |
 
+## The loop in diagrams
+
+The loop has four explicit state machines, and each one keeps its state in a file or a script: the stage a feature is at (`sdlc.yaml`), one stage's status (`sdlc.yaml`), one phase's status (`plan.md`) and the gate hook's decision (`sdlc-gate.sh`). It also has two implicit ones that no file names: the life of one test across Plan, Build and Test, and the files that one feature leaves for the next. The hook's decision is drawn under [Gate hook](#gate-hook).
+
+### Who helps at each stage
+
+Each row is one stage. The dark box is the stage's skill and its artifact, and the boxes after it are the helpers it calls, in the order it calls them.
+
+```mermaid
+flowchart TB
+    classDef stage fill:#1f2937,stroke:#111827,color:#ffffff
+    classDef egm fill:#dbeafe,stroke:#1d4ed8,color:#111827
+    classDef rfc fill:#ffe4e6,stroke:#be123c,color:#111827
+    classDef tt fill:#dcfce7,stroke:#15803d,color:#111827
+    classDef pony fill:#fef3c7,stroke:#b45309,color:#111827
+    classDef prr fill:#f3e8ff,stroke:#7e22ce,color:#111827
+    classDef own fill:#e5e7eb,stroke:#374151,color:#111827
+    classDef other fill:#ffffff,stroke:#6b7280,color:#111827,stroke-dasharray: 4 3
+
+    subgraph S1["1 · Intent"]
+        direction LR
+        a0["sdlc:intent<br/>intent.md"]:::stage --> a1["EGM egm-brainstorm<br/>questions the originator, then seven Goldfish reviewers stress-test the idea"]:::egm
+    end
+    subgraph S2["2 · Spec"]
+        direction LR
+        b0["sdlc:spec<br/>spec.md"]:::stage --> b1["Policy skills in the session<br/>security, compliance and API rules apply while the spec is written"]:::other --> b2["EGM egm-review-loop<br/>checks the spec against the feature-spec standard"]:::egm
+    end
+    subgraph S3["3 · RFC"]
+        direction LR
+        c0["sdlc:rfc<br/>rfc.html"]:::stage --> c1["rfc skill<br/>writes the design as a reviewable HTML page"]:::rfc --> c2["EGM egm-review, egm-resolve<br/>review the design, then settle each finding with the owner"]:::egm
+    end
+    subgraph S4["4 · Plan"]
+        direction LR
+        d0["sdlc:plan<br/>plan.md"]:::stage --> d1["testing toolkit<br/>decides the tests, with a kind of test for each component"]:::tt --> d2["ponytail ladder<br/>removes each file, dependency and option the plan doesn't need"]:::pony --> d3["EGM egm-review<br/>checks that a stranger could build from the plan"]:::egm
+    end
+    subgraph S5["5 · Build"]
+        direction LR
+        e0["sdlc:build<br/>code and tests"]:::stage --> e1["ponytail mode<br/>keeps each edit the smallest that works"]:::pony --> e2["testing toolkit<br/>writes each planned test first, then proves that it can fail"]:::tt --> e3["pr-review --local<br/>a fresh session reviews each phase's commits"]:::prr
+    end
+    subgraph S6["6 · Test"]
+        direction LR
+        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>checks the tests against the plan, and writes missing ones"]:::tt --> f2["verifier subagent<br/>runs the app against each criterion, and fixes nothing"]:::own --> f3["pr-review --local<br/>a fresh session reviews the whole branch"]:::prr
+    end
+    subgraph S7["7 · Ship"]
+        direction LR
+        g0["sdlc:ship<br/>PR and review.md"]:::stage --> g1["pr-review --repo --pr<br/>reviews the PR that was pushed"]:::prr --> g2["A human<br/>approves and merges the PR, and authorises production"]:::other
+    end
+    subgraph S8["8 · ADR"]
+        direction LR
+        h0["sdlc:adr<br/>adr.html"]:::stage --> h1["EGM egm-drift-report<br/>lists where the merged code departs from the RFC"]:::egm --> h2["rfc skill<br/>builds the ADR page from a copy of the RFC"]:::rfc
+    end
+    subgraph S9["9 · Maintain"]
+        direction LR
+        j0["sdlc:maintain<br/>lessons.md"]:::stage --> j1["Observability tools in the session<br/>read the live signal for each success criterion"]:::other --> j2["EGM egm-drift-report<br/>in drift mode, checks every ADR against the current code"]:::egm --> j3["ponytail-audit<br/>in drift mode, ranks what to delete across the repo"]:::pony
+    end
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
+```
+
+| Colour | Helper | What it adds |
+|---|---|---|
+| 🟦 | [EGM](https://github.com/google/elephant-goldfish-model) | Goldfish reviewers read each document with no memory of the conversation that produced it |
+| 🟥 | The `rfc` skill | Writes the RFC, and later the ADR, as an HTML page a reviewer can read |
+| 🟩 | [Testing toolkit](https://github.com/aasimsani/testing-toolkit) | Decides the tests in Plan, writes each one before the code in Build, and checks them in Test |
+| 🟨 | [ponytail](https://github.com/DietrichGebert/ponytail) | Keeps the plan and the code as small as they can be |
+| 🟪 | [pr-review](https://github.com/aasimsani/pr-review) | Reviews code in a fresh session that has none of the build session's context |
+| ⬜ | This plugin, or whatever the session has | The `verifier` subagent is this plugin's own. Policy skills and observability tools come from the session. |
+
+Every stage ends at the same gate, where a human approves the artifact. Superpowers and agent-skills aren't in the diagram, because the loop doesn't call them. [`references/companions.md`](plugins/sdlc/references/companions.md) says which of their skills help with one step.
+
+### Paths between stages
+
+A feature's stage is the first one in `sdlc.yaml` that isn't approved or skipped. The thick arrows are approvals, and the thin arrows are the paths back.
+
+```mermaid
+flowchart LR
+    classDef optional stroke-dasharray: 4 3
+    I([Intent]) ==> S([Spec]) ==> R([RFC]):::optional ==> P([Plan]) ==> B([Build]) ==> T([Test]) ==> H([Ship]) ==> A([ADR]):::optional ==> M([Maintain])
+    T -- "new phase" --> B
+    B -- "an earlier artifact is wrong" --> S
+    M -- "new feature" --> I
+```
+
+- The dashed stages can be skipped. The approver may skip a stage that adds nothing, and `sdlc.yaml` records the reason. A skipped RFC skips the ADR too. Build, Test and Ship are never skipped.
+- Test sends the feature back to Build as a new phase when a criterion fails, a test fails on the code, or the review has a blocking finding.
+- When any stage finds that an earlier artifact is wrong, the artifact is fixed in its own commit and its stage goes back to draft. The arrow shows one case, where Build finds that a requirement has to change.
+- A follow-up, an incident or a drift finding starts a new feature at Intent.
+- Some loops stay inside one stage. Every stage repeats its review until a human approves. Build repeats once per phase, and Ship fixes each blocking finding and pushes again until none is open.
+
+### One stage's status
+
+Each stage's entry in `sdlc.yaml` holds one of three statuses. Claude can write `draft`. Only a human's decision produces `approved` or `skipped`.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> draft: the stage starts
+    draft --> draft: review findings, or the approver asks for changes
+    draft --> approved: a human approves, and each tool is on record
+    draft --> skipped: the approver skips it, with a reason
+    approved --> draft: a later stage finds the artifact wrong
+    approved --> [*]: its commit starts the next stage
+    skipped --> [*]
+```
+
+### One Build phase
+
+A phase in `plan.md` is `pending`, `in_progress` or `done`. Inside a phase the order is fixed. The tests fail first, and then the code makes them pass.
+
+```mermaid
+flowchart TB
+    pending([pending]) -- "Build picks the phase and writes its todos" --> red
+    subgraph ip["in_progress"]
+        red["Red<br/>The testing toolkit writes the tests the plan chose, and each one fails for the expected reason."]
+        green["Green<br/>The smallest code that makes them pass is written, and the verify command passes."]
+        proven["Proven<br/>Each test gives the same result over five runs, and fails on a planted bug."]
+        review["Review<br/>pr-review --local reads the phase's commits in a fresh session."]
+        fix["Fix it and commit"]
+        paused["Paused<br/>One wip commit, and a Resume line under the todos."]
+        red -- "commit the tests" --> green
+        green --> proven
+        proven -- "commit" --> review
+        review -- "a blocking finding is open" --> fix
+        fix --> review
+        green -. "the session has to stop" .-> paused
+        paused -. "the next session resumes" .-> green
+    end
+    review -- "no blocking finding is open" --> done([done])
+    review -- "two runs in a row closed nothing" --> ask(["The approver decides"])
+    done -- "another phase is pending" --> pending
+    done -- "no phase is left" --> approved(["Build is approved"])
+```
+
+### The life of one test
+
+This one is implicit. No file tracks a test's state, but each test passes through three stages, and the plan's Tests section is what they share.
+
+```mermaid
+stateDiagram-v2
+    state "Chosen, as a row in plan.md" as Chosen
+    state "Missing from the plan" as Missing
+    [*] --> Chosen: Plan decides it
+    Chosen --> Failing: Build writes it before the code
+    Failing --> Passing: the phase's code is written
+    Passing --> Proven: five identical runs, and a failure on a planted bug
+    Passing --> Dropped: it fails one of those checks
+    Dropped --> [*]: plan.md is updated in the same commit
+    Proven --> Checked: Test compares it with the plan
+    Checked --> [*]: evidence in verify.md
+    [*] --> Missing: Test finds changed code that no test checks
+    Missing --> Checked: the toolkit writes the test, and it passes
+    Missing --> Failing: it fails on the code, so Build gets a new phase
+```
+
+### What one feature changes for the next
+
+These loops are implicit too. Each one is a file that a stage leaves in the repo and that a later session reads.
+
+```mermaid
+flowchart LR
+    l1["Every stage<br/>sdlc.yaml and the artifacts, in git"] --> r1["The status line at session start,<br/>so any session resumes at the right stage"]
+    l2["Any stage, after the same mistake twice<br/>a lint rule, a test, a hook or a line in CLAUDE.md"] --> r2["Every later session in the repo"]
+    l3["Maintain, for a gap that pr-review found<br/>an edit to REVIEW.md or to a policy skill"] --> r3["Later specs and later reviews"]
+    l4["Test<br/>a feature file in the verification skill"] --> r4["The verifier, on the next change<br/>to the same feature"]
+    l5["Maintain<br/>an eval case made from the feature's task"] --> r5["The Test stage, when a diff<br/>changes CLAUDE.md or a skill"]
+    l6["ADR<br/>a record of what was built"] --> r6["The drift check, which turns<br/>each divergence into a new intent"]
+    l7["Maintain<br/>lessons.md and its follow-ups"] --> r7["A new feature at Intent"]
+```
+
 ## How the text is organised
 
 Claude loads this plugin's text in layers, so a session only pays for what the current stage needs.
@@ -66,6 +234,19 @@ Three rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers 
 | Nothing commits on the default branch | Denies `git commit` there, and tells Claude to switch to the feature branch |
 | A human approves and merges each PR | Makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run the ask becomes a denial. |
 | A stage is approved only with its tools on record | Denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml` |
+
+```mermaid
+flowchart LR
+    cmd(["Claude is about to run<br/>a Bash command"]) --> q1{"gh pr merge, or an<br/>approving gh pr review?"}
+    q1 -- yes --> ask(["Ask the user"])
+    q1 -- no --> q2{"git commit?"}
+    q2 -- no --> allow(["Allow"])
+    q2 -- yes --> q3{"On the default<br/>branch?"}
+    q3 -- yes --> deny1(["Deny"])
+    q3 -- no --> q4{"Does it approve a stage<br/>with a tool missing<br/>from sdlc.yaml?"}
+    q4 -- yes --> deny2(["Deny"])
+    q4 -- no --> allow
+```
 
 Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason.
 
@@ -97,7 +278,15 @@ Ponytail runs at four points without anyone invoking it. Plan applies its ladder
 
 ### Tests (testing toolkit)
 
-Build invokes the toolkit's `testing` skill at each phase's test-first step, and Test invokes it once on the whole branch. That skill classifies the change and picks the kinds of test, so the stages name no kind of test themselves. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to the skill, and where the loop's order wins over the toolkit's. For example, a Build test is written before the code, so the toolkit's checks that need passing code run after the phase is green. Each stage saves the skill's report under `testing/` in the feature folder. Without the toolkit, Build writes its own failing test, Test skips the check, and `sdlc.yaml` records the skip.
+Build is test first, so the tests are decided before any code exists. The toolkit's `testing` skill does one job in three stages:
+
+| Stage | What the skill does | Where the result goes |
+|---|---|---|
+| Plan | Classifies the change and picks a kind of test for each component. It writes no test. | The Tests section of `plan.md` |
+| Build | Writes each phase's planned tests before the code. After the phase is green, it proves that each test is stable and fails on a planted bug. | `testing/build.md` |
+| Test | Checks the tests against the plan, finds changed code that no test checks, and writes the missing tests | `testing/test.md` |
+
+The stages call only that skill, and it chooses the toolkit's other skills. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to it and where the loop's order wins over the toolkit's. Without the toolkit, Plan chooses the tests itself, Build writes them itself, Test skips the check, and `sdlc.yaml` records each skip.
 
 ### Document reviewers (EGM)
 
