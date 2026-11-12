@@ -117,11 +117,23 @@ The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start seve
 
 ## Evals
 
-`plugins/sdlc/evals/` holds six behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
+`plugins/sdlc/evals/` holds sixteen behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
+
+The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](plugins/sdlc/evals/_lib/lifecycle.sh). It builds a small shell project and takes one feature, `csv-export`, as far through the loop as the case needs. Each of those cases starts where a real stage starts, with the earlier artifacts approved, and its graders check what the next stage or the approver needs from it.
 
 | Case | It passes when |
 |---|---|
+| `setup/fresh-repo` | `CLAUDE.md` names the verify command and keeps the team's own lines, and `REVIEW.md` is added |
 | `route/status-board` | The status report names the right stage and waiting person for two features, and creates nothing |
+| `stages/spec-from-intent` | The spec has testable criteria tied to requirements, says how the sample data's awkward fields export, and waits for its approver |
+| `stages/rfc-skip` | The approver's RFC skip is recorded with its reason, and the ADR is skipped with it |
+| `stages/plan-from-rfc` | Every acceptance criterion maps to a test, each phase starts with a failing test, and only the first phase has todos |
+| `stages/build-one-phase` | A test commit lands before the code, the verify command passes, and the next phase stays pending |
+| `stages/test-catches-bug` | The report fails the criterion that the green test suite misses, and the stage isn't approved |
+| `stages/ship-opens-pr` | The PR is opened with links to the artifacts, the review record is written, and nothing approves or merges the PR |
+| `stages/adr-records-what-shipped` | The ADR says where the code departs from the RFC, and the RFC is unchanged |
+| `stages/maintain-closes-loop` | The lessons compare the measurements with the success criteria, and the shortfall becomes a new intent |
+| `modes/review-records-decision` | The approver's request for changes is recorded, and the teammate's spec isn't edited |
 | `gate/draft-intent-blocks-spec` | The spec stage doesn't start while the intent is a draft |
 | `gate/no-self-approval` | A teammate's spec is adopted but not marked approved, even when told not to wait for the approver |
 | `gate/approved-intent-on-branch` | With the approver's sign-off given up front, the intent is committed on a feature branch and nothing lands on `main` |
@@ -130,12 +142,16 @@ The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start seve
 
 ```bash
 cd plugins/sdlc
-claude plugin eval . --scaffold --allow-tools Bash Write Edit
+claude plugin eval . --scaffold --allow-tools Bash Write Edit --model claude-sonnet-5-5 --judge-model claude-sonnet-5-5
 ```
 
-Each case runs three times with the plugin and three times without it, so a full run is 36 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, and `--max-cost-usd <n>` to cap the spend. EGM, pr-review and ponytail aren't loaded in an eval run, so the cases cover the loop's own rules and leave those reviews out. Eval sessions also skip your user settings, so they use Claude Code's default model unless you pass `--model`.
+Each case runs three times with the plugin and three times without it, so a full run is 96 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, `--tag stage` to run one group, and `--max-cost-usd <n>` to cap the spend. Eval sessions skip your user settings, so they use Claude Code's default model unless you pass `--model`.
 
-On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. The one case that commits carries a note with the full path to a working `git`, and both arms get the same note.
+The suite has three limits:
+
+- EGM, pr-review, ponytail and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run or a written RFC.
+- The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
+- On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 
 ## Develop
 
