@@ -20,7 +20,7 @@ Feature: `$ARGUMENTS`
 
 3. **Check the UI if there is one.** Open it with the browser tools, take screenshots, and compare them against the spec or the mockups.
 
-4. **Run the final `pr-review --local`** on the whole branch, and copy the report to `pr-review/test-1.md`. Compare its fingerprints with the last Build run. A Critical or High finding sends the feature back to Build.
+4. **Run the final `pr-review --local`** on the whole branch, with the ponytail lens and the feature's perspectives. Copy the report to `pr-review/test-1.md`, and compare its fingerprints with the last Build run. A Critical or High finding sends the feature back to Build. This run also catches over-engineering that only shows across phases, such as an option no phase ended up using, so record its "Net:" line in `verify.md`.
 
 5. **Run the agent evals if the diff changes them.** When the diff touches `CLAUDE.md`, `.claude/**` or skills, and the repo has an eval suite, run it and record the pass rate.
 
@@ -50,6 +50,8 @@ Feature: `$ARGUMENTS`
 
 ## pr-review
 - Report: `pr-review/test-1.md`, with verdict <verdict> and totals <Critical n, High n, Medium n, Low n>
+- Net: <the ponytail lens's "-N lines and -M dependencies possible", or "lean already">
+- SIMPLE cuts left in, with reasons: <fingerprint — reason>
 - Fixed since Build: <fingerprints>
 - Open, with reasons: <fingerprint — reason>
 

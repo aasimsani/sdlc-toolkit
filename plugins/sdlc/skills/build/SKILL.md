@@ -28,7 +28,7 @@ Feature: `$ARGUMENTS`
 
 4. **Refactor and verify.** Run the verify command and paste the last lines of its output. A phase isn't done until the verify command passes.
 
-5. **Review with pr-review.** Commit, then run `pr-review --local` as `tools.md` describes, and copy the report to `pr-review/build-<n>.md`. Fix every Critical and High finding, commit the fixes, and run it again. Repeat until those findings are fixed or carry a won't-fix reason that the approver accepts. Use the fingerprint comparison to report what's fixed, new and still open.
+5. **Review with pr-review.** Commit, then run `pr-review --local` with the ponytail lens and the feature's perspectives, as `tools.md` describes. Copy the report to `pr-review/build-<n>.md`. Apply the SIMPLE cuts the owner agrees with now, while the code is cheap to change. Fix every Critical and High finding, commit the fixes, and run it again. Repeat until those findings are fixed or carry a won't-fix reason that the approver accepts. Use the fingerprint comparison to report what's fixed, new and still open.
 
 6. **Keep `plan.md` true.** Check off each item when it's done. When the work has to depart from the plan, update `plan.md` in the same commit as the code and say what changed. If the departure changes a requirement or the RFC's design, stop and go back to that stage.
 

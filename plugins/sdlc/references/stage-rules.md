@@ -18,6 +18,7 @@ stages:
 - `owner` is the person who produces the artifact. `approver` is the person who must approve it. Ask for both at the start of a stage if they're unknown. Never invent a name. Write `unassigned` instead.
 - `artifact` is a path in the folder, or a URL when the artifact lives elsewhere, such as a Notion page.
 - `goldfish: skipped` with a `reason` records that the approver skipped the stage's Goldfish review.
+- An optional top-level `pr_review` block sets the feature's pr-review panel and lenses. `tools.md` describes it.
 
 ## Three modes
 

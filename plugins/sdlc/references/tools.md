@@ -43,6 +43,24 @@ Find `PR_REVIEW_ROOT` with the command above. The script is `$PR_REVIEW_ROOT/ski
 - **Local** (Build and Test). Commit first, because the script reviews committed `HEAD` only. Then run `"$SCRIPT" --local` from the repo root. It prints the review file's path on stdout.
 - **PR** (Ship). Run `"$SCRIPT" --repo <owner/name> --pr <n>`. It writes `~/pr-reviews/<date>/<owner>_<repo>_PR<n>.md`.
 
+### Perspectives
+
+pr-review takes one `--panel FILE` and any number of `--lens FILE` flags. The panel says who reviews, and each lens adds a reviewer or rules. Build every run's flags in this order:
+
+1. **The stage's default lens.** Build and Test runs add `--lens "$PR_REVIEW_ROOT/examples/ponytail-lens.md"`. It adds an over-engineering reviewer whose SIMPLE findings are never High or Critical, so it suggests cuts without blocking the stage. Ship adds no default lens, so the human reviewer sees correctness findings without simplification nits.
+2. **The feature's perspectives.** When `sdlc.yaml` has a `pr_review` block, pass its panel and lenses to every run. A stage key overrides the feature default for that stage.
+
+   ```yaml
+   pr_review:
+     panel: .pr-review/panels/red-team.md        # optional, for every stage
+     lenses: [.pr-review/lenses/migrations.md]   # added to every stage
+     ship: {panel: .pr-review/panels/default-plus-lead.md}
+   ```
+
+3. **The repo's own perspectives.** pr-review reads `REVIEW.md`, `.pr-review/panel.md` and `.pr-review/lenses/*.md` from the base branch by itself, so don't pass them.
+
+When the spec is high-risk, ask the approver at Build whether to add a specialist panel or lens for the risky area, such as the red-team panel in `$PR_REVIEW_ROOT/examples/` for an auth change. Record the answer in `sdlc.yaml`.
+
 After each run, take these steps:
 
 1. Copy the review to `docs/sdlc/<slug>/pr-review/<stage>-<n>.md`, numbering runs from 1.
