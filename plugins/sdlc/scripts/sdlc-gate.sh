@@ -25,11 +25,16 @@ required_tools() {
   case "$1" in
     intent|spec|adr) echo "goldfish" ;;
     plan)  echo "testing goldfish" ;;
-    rfc)   echo "rfc-skill goldfish" ;;
+    rfc)   echo "rfc-skill formal-verification goldfish" ;;
     build) echo "ponytail testing pr-review" ;;
     test)  echo "testing test-audit verifier pr-review" ;;
     ship)  echo "pr-review" ;;
   esac
+}
+
+# A feature that modelled its design at RFC also owes Test a second model, written from the code.
+conditional_tools() {                 # args: stage feature-dir
+  [ "$1" = test ] && [ -e "$2/fv/design/README.md" ] && echo "fv-verifier"
 }
 
 # Reads an sdlc.yaml on stdin and prints "<stage>\t<that stage's entry on one line>" for each stage.
@@ -176,7 +181,7 @@ for f in "$root"/docs/sdlc/*/sdlc.yaml; do
     entry="$(entry_of "$stage" <<<"$work")"
     is_approved "$entry" || continue
     is_approved "$(entry_of "$stage" <<<"$head")" && continue
-    for tool in $(required_tools "$stage"); do
+    for tool in $(required_tools "$stage") $(conditional_tools "$stage" "$(dirname "$f")"); do
       tool_ok "$entry" "$tool" "$(dirname "$f")" || missing="$missing $stage needs $tool in $rel."
     done
   done

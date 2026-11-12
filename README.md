@@ -1,6 +1,6 @@
 # sdlc-toolkit
 
-A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes the ones that drive the code in Build, and writes the final ones, checks them all and audits the suite in Test.
+A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes the ones that drive the code in Build, and writes the final ones, checks them all and audits the suite in Test. The optional [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) checks a design's never-and-always claims in a model before any code exists, and Test checks them again in a second model written from the code.
 
 ```
 intent → spec → RFC → plan → build → test → ship → ADR → maintain
@@ -12,13 +12,13 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 |---|---|---|---|
 | 1 | Intent | `intent.md` | `egm-brainstorm` (seven Goldfish lenses) |
 | 2 | Spec | `spec.md` | `egm-review-loop` with the feature-spec standard |
-| 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | `egm-review`, then `egm-resolve` |
+| 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | The fv-toolkit's check of the design's claims, `egm-review`, then `egm-resolve` |
 | 4 | Plan | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation-readiness stage |
 | 5 | Build | code + tests, each test written before the code it tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `verify.md` | The testing toolkit's final tests, check and audit, the `verifier` subagent + final `pr-review --local` with the ponytail lens |
+| 6 | Test | `verify.md` | The testing toolkit's final tests, check and audit, the `verifier` subagent, the `fv-verifier` subagent when the design was modelled + final `pr-review --local` with the ponytail lens |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
-| 9 | Maintain | `lessons.md` | `egm-drift-report`, `ponytail-audit` + live signals |
+| 9 | Maintain | `lessons.md` | `egm-drift-report`, `fv-maintain`, `ponytail-audit` + live signals |
 
 `docs/sdlc/<slug>/sdlc.yaml` records each stage's status, owner and approver, and the tools the stage ran or skipped. A human approves every artifact. Claude never approves its own work, merges a PR, or deploys to production.
 
@@ -29,7 +29,7 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https://github.com/DietrichGebert/ponytail) and the testing toolkit if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
+Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https://github.com/DietrichGebert/ponytail) and the testing toolkit if they're missing, and it offers the fv-toolkit, which is optional. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
 
 ## Use
 
@@ -44,7 +44,7 @@ Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https:/
 
 ## The loop in diagrams
 
-The loop has four explicit state machines, and each one keeps its state in a file or a script: the stage a feature is at (`sdlc.yaml`), one stage's status (`sdlc.yaml`), one phase's status (`plan.md`) and the gate hook's decision (`sdlc-gate.sh`). It also has two implicit ones that no file names: the life of one test across Plan, Build and Test, and the files that one feature leaves for the next. The hook's decision is drawn under [Gate hook](#gate-hook).
+The loop has four explicit state machines, and each one keeps its state in a file or a script: the stage a feature is at (`sdlc.yaml`), one stage's status (`sdlc.yaml`), one phase's status (`plan.md`) and the gate hook's decision (`sdlc-gate.sh`). It also has three implicit ones that no file names: the life of one test across Plan, Build and Test, the life of one property from RFC to Maintain, and the files that one feature leaves for the next. The hook's decision is drawn under [Gate hook](#gate-hook).
 
 ### Who helps at each stage
 
@@ -59,6 +59,7 @@ flowchart TB
     classDef tt fill:#dcfce7,stroke:#15803d,color:#111827
     classDef pony fill:#fef3c7,stroke:#b45309,color:#111827
     classDef prr fill:#f3e8ff,stroke:#7e22ce,color:#111827
+    classDef fv fill:#e7d5c4,stroke:#78350f,color:#111827
     classDef own fill:#e5e7eb,stroke:#374151,color:#111827
     classDef other fill:#ffffff,stroke:#6b7280,color:#111827,stroke-dasharray: 4 3
 
@@ -72,7 +73,7 @@ flowchart TB
     end
     subgraph S3["3 · RFC"]
         direction LR
-        c0["sdlc:rfc<br/>rfc.html"]:::stage --> c1["rfc skill<br/>writes the design as a reviewable HTML page"]:::rfc --> c2["EGM egm-review, egm-resolve<br/>review the design, then settle each finding with the owner"]:::egm
+        c0["sdlc:rfc<br/>rfc.html"]:::stage --> c1["rfc skill<br/>writes the design as a reviewable HTML page"]:::rfc --> c3["fv-toolkit formal-verification<br/>checks the design's never and always claims in a model, before any code exists"]:::fv --> c2["EGM egm-review, egm-resolve<br/>review the design, then settle each finding with the owner"]:::egm
     end
     subgraph S4["4 · Plan"]
         direction LR
@@ -84,7 +85,7 @@ flowchart TB
     end
     subgraph S6["6 · Test"]
         direction LR
-        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>writes the final tests, checks Build's tests, then audits the suite with test-audit"]:::tt --> f2["verifier subagent<br/>runs the app against each criterion, and fixes nothing"]:::own --> f3["pr-review --local<br/>a fresh session reviews the whole branch"]:::prr
+        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>writes final tests,<br/>checks Build's tests,<br/>runs test-audit last"]:::tt --> f2["verifier subagent<br/>runs the app against<br/>each criterion, and<br/>fixes nothing"]:::own --> f4["fv-verifier subagent<br/>models the code afresh<br/>when the design<br/>was modelled"]:::fv --> f3["pr-review --local<br/>a fresh session<br/>reviews the whole<br/>branch"]:::prr
     end
     subgraph S7["7 · Ship"]
         direction LR
@@ -96,7 +97,7 @@ flowchart TB
     end
     subgraph S9["9 · Maintain"]
         direction LR
-        j0["sdlc:maintain<br/>lessons.md"]:::stage --> j1["Observability tools in the session<br/>read the live signal for each success criterion"]:::other --> j2["EGM egm-drift-report<br/>in drift mode, checks every ADR against the current code"]:::egm --> j3["ponytail-audit<br/>in drift mode, ranks what to delete across the repo"]:::pony
+        j0["sdlc:maintain<br/>lessons.md"]:::stage --> j1["Observability tools<br/>read the live signal<br/>for each success<br/>criterion"]:::other --> j2["EGM egm-drift-report<br/>in drift mode, checks<br/>every ADR against<br/>the code"]:::egm --> j4["fv-toolkit fv-maintain<br/>in drift mode, checks<br/>each model against<br/>the code"]:::fv --> j3["ponytail-audit<br/>in drift mode, ranks<br/>what to delete<br/>across the repo"]:::pony
     end
     S1 ==> S2 ==> S3 ==> S4 ==> S5 ==> S6 ==> S7 ==> S8 ==> S9
     style S3 stroke-dasharray: 6 4
@@ -109,6 +110,7 @@ flowchart TB
 | 🟥 | The `rfc` skill | Writes the RFC, and later the ADR, as an HTML page a reviewer can read |
 | 🟩 | [Testing toolkit](https://github.com/aasimsani/testing-toolkit) | Decides the tests in Plan, writes the Build tests before the code, and in Test writes the final tests, checks them all and audits the suite |
 | 🟨 | [ponytail](https://github.com/DietrichGebert/ponytail) | Keeps the plan and the code as small as they can be |
+| 🟫 | [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit), optional | Checks a design's claims in a model at RFC, models the code afresh in Test through this plugin's `fv-verifier` subagent, and keeps the models in step in Maintain |
 | 🟪 | [pr-review](https://github.com/aasimsani/pr-review) | Reviews code in a fresh session that has none of the build session's context |
 | ⬜ | This plugin, or whatever the session has | The `verifier` subagent is this plugin's own. Policy skills and observability tools come from the session. |
 
@@ -129,7 +131,7 @@ stateDiagram-v2
     Build --> Build: the next phase
     Build --> Spec: an earlier artifact is wrong
     Build --> Test
-    Test --> Build: a criterion or a test fails
+    Test --> Build: a criterion, a test or a property fails
     Test --> Ship
     Ship --> Ship: fix a finding and push
     Ship --> ADR
@@ -141,7 +143,7 @@ stateDiagram-v2
 
 - The approver may skip a stage that adds nothing, and `sdlc.yaml` records the reason. A skipped RFC skips the ADR too. Build, Test and Ship are never skipped.
 - Build runs one phase of `plan.md` at a time, and it's approved when every phase is done.
-- Test sends the feature back to Build as a new phase when a criterion fails, a test fails on the code, or the review has a blocking finding.
+- Test sends the feature back to Build as a new phase when a criterion fails, a test fails on the code, the code breaks a confirmed property, or the review has a blocking finding.
 - Ship fixes each blocking finding and pushes again until none is open. Then a human approves and merges.
 - When any stage finds that an earlier artifact is wrong, the artifact is fixed in its own commit and its stage goes back to draft. The arrow shows one case, where Build finds that a requirement has to change.
 - A follow-up, an incident or a drift finding starts a new feature at Intent.
@@ -215,6 +217,34 @@ stateDiagram-v2
     Dropped --> [*]: plan.md is updated in the same commit
 ```
 
+### The life of one property
+
+This one is implicit too, and it applies only to a feature that makes a claim worth a formal check. The property is checked twice, by two models that share no assumptions. The first is written from the design at RFC. The second is written from the code in Test, by a subagent that never sees the first.
+
+```mermaid
+stateDiagram-v2
+    state "Claimed in the spec or the RFC" as Claimed
+    state "Left to ordinary tests" as Ordinary
+    state "Confirmed and pinned" as Confirmed
+    state "Refuted on the design" as Refuted
+    state "Planned as tests" as Planned
+    state "Broken in the code" as Broken
+    state "Kept beside the code" as Kept
+    [*] --> Claimed: a sentence says never, always or exactly once
+    Claimed --> Ordinary: the triage finds nothing that earns a formal check
+    Claimed --> Confirmed: the approver agrees to the property as one sentence
+    Confirmed --> Refuted: the design model finds a counterexample
+    Refuted --> Confirmed: the RFC's design changes
+    Confirmed --> Planned: the design model holds, and Plan gives the property its tests
+    Planned --> Broken: in Test, a fresh model of the code finds a counterexample
+    Broken --> Planned: Build fixes the code in a new phase
+    Planned --> Kept: the fresh model holds, and it is committed beside the code
+    Kept --> Drifted: the covered code changes
+    Drifted --> Kept: fv-maintain updates the model, and it still holds
+    Drifted --> [*]: fv-maintain finds a bug, which becomes a new intent
+    Ordinary --> [*]
+```
+
 ### What one feature changes for the next
 
 These loops are implicit too. Each one is a file that a stage leaves in the repo and that a later session reads.
@@ -228,6 +258,7 @@ flowchart LR
     l4["Test<br/>a feature file in the verification skill"] --> r4["The verifier, on the next change<br/>to the same feature"]
     l5["Maintain<br/>an eval case made from the feature's task"] --> r5["The Test stage, when a diff<br/>changes CLAUDE.md or a skill"]
     l6["ADR<br/>a record of what was built"] --> r6["The drift check, which turns<br/>each divergence into a new intent"]
+    l8["Test<br/>a formal model beside the code, with its sync record"] --> r8["fv-maintain in drift mode, which says whether the model or the code moved"]
     l7["Maintain<br/>lessons.md and its follow-ups"] --> r7["A new feature at Intent"]
 ```
 
@@ -241,7 +272,7 @@ Claude loads this plugin's text in layers, so a session only pays for what the c
 | Skill descriptions | The frontmatter of each `skills/<stage>/SKILL.md` | In every session, about 1,500 tokens in total |
 | One stage | `skills/<stage>/SKILL.md`, with its steps and its artifact template | When that stage runs |
 | Rules every stage shares | `references/stage-rules.md` | At the start of each stage |
-| One tool | `references/egm.md`, `pr-review.md`, `ponytail.md`, `testing-toolkit.md`, `rfc-skill.md` | Only by the stages that use that tool |
+| One tool | `references/egm.md`, `pr-review.md`, `ponytail.md`, `testing-toolkit.md`, `fv-toolkit.md`, `rfc-skill.md` | Only by the stages that use that tool |
 | Other workflow plugins | `references/companions.md` | Only when Claude is about to invoke a superpowers or agent-skills skill |
 
 Each rule that spans stages lives in one file, and `tests/test_structure.sh` fails if one gets copied into a second file. The loop's tone is plain on purpose. It names a small set of hard rules, and it leaves the rest to the model and to your own instructions, which win over a stage's steps and templates.
@@ -270,7 +301,7 @@ flowchart TB
     q4 -- no --> allow
 ```
 
-Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason.
+Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason. One tool is conditional. A feature that modelled its design at RFC also owes Test a second model, written from the code.
 
 The hook is opt-in per repo, and it's a file the team can read and change. To gate another command, such as a production deploy, add a rule to the copy in the repo.
 
@@ -319,6 +350,21 @@ The toolkit's `testing` skill does one job across three stages, and its `test-au
 | Test, last | `test-audit` removes or merges a test only when a stronger one covers the same contract | `testing/audit.md` |
 
 The audit is the stage's last change to the tests. It runs before the verify command, the verifier and the final pr-review, so their evidence describes the suite that ships. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to the toolkit and where the loop's order wins over the toolkit's. Without the toolkit, each stage does its own part by hand, Test skips the check and the audit, and `sdlc.yaml` records each skip.
+
+### Formal checks (fv-toolkit)
+
+The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) is optional. It settles a claim that says never, always, at most once or exactly once, by trying every ordering or every small structure in a model. Most features have no such claim, and its triage says so in one paragraph.
+
+| Stage | What happens | Where the result goes |
+|---|---|---|
+| Spec | A spec that makes such a claim about ordering, retries, permissions or a rule table can't skip the RFC | `spec.md` |
+| RFC | The `formal-verification` skill triages the claims. When one earns a check, the approver confirms the properties, and the skill models the design, checks it and plants bugs. A counterexample changes the design. | `fv/design/`, with the property ledger in its `README.md` |
+| Plan | Each confirmed property gets a Build test that replays a counterexample, and a final test on the running code | The Tests section of `plan.md` |
+| Build | Nothing new. The replay tests are Build tests, written before the code. | `testing/build.md` |
+| Test | The `fv-verifier` subagent writes a second model from the code. It gets the spec and the properties as sentences, and never sees the RFC, the plan or the first model. The stage compares the two models property by property. | `fv/code-report.md`, and the model beside the code |
+| Maintain | In `drift` mode, `fv-maintain` says whether each model still describes the code, and whether a failure is drift in the model or a bug in the code | A new intent for each bug |
+
+The second model is kept and the first stays with the RFC, so each behaviour has one model to keep in step. A pass is bounded by the sizes and faults that were checked, and `verify.md` says so. [`references/fv-toolkit.md`](plugins/sdlc/references/fv-toolkit.md) has what each stage passes to the toolkit. Without the toolkit, the RFC stage names each such claim to the approver and records the skip.
 
 ### Document reviewers (EGM)
 
@@ -380,7 +426,7 @@ Each case runs three times with the plugin and three times without it, so a full
 
 The suite has three limits:
 
-- EGM, pr-review, ponytail, the testing toolkit and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run, the testing toolkit's choice of tests or a written RFC.
+- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run, the testing toolkit's choice of tests, a formal check or a written RFC.
 - The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 
@@ -411,18 +457,20 @@ The last full run was on 2026-11-12. It tested plugin version 0.6.0 on Claude Co
 
 The run's [report](docs/evals/2026-11-12-sonnet-5-5/report.html) shows every grader's verdict for every run, and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5/aggregate-result.json) holds the same data. Both files are as `claude plugin eval` wrote them, except that the home directory in two paths is shortened to `~`. The run cost $12.98 at list price.
 
-Version 0.7.0 changed the Plan, Build and Test stages, so the four cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. The other thirteen rows above are from the 0.6.0 run. The testing toolkit isn't loaded in an eval run, so this rerun shows only that the three stages behave as before without it.
+Versions 0.7.0 and 0.8.0 changed the Spec, RFC, Plan, Build and Test stages, so the six cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. Each row gives the version it last ran on. The other eleven rows above are from the 0.6.0 run. The testing toolkit and the fv-toolkit aren't loaded in an eval run, so these reruns show only that the stages behave as before without them.
 
-| Case | With plugin | Without | Runs that invoked a skill |
-|---|---|---|---|
-| `stages/plan-from-rfc` | 1.00 | 0.83 | 3 of 3 |
-| `stages/build-one-phase` | 0.93 | 0.93 | 3 of 3 |
-| `stages/test-catches-bug` | 1.00 | 0.86 | 3 of 3 |
-| `build/next-phase-todos` | 1.00 | 1.00 | 3 of 3 |
+| Case | Version | With plugin | Without | Runs that invoked a skill |
+|---|---|---|---|---|
+| `stages/spec-from-intent` | 0.8.0 | 1.00 | 0.57 | 3 of 3 |
+| `stages/rfc-skip` | 0.8.0 | 1.00 | 0.57 | 3 of 3 |
+| `stages/plan-from-rfc` | 0.8.0 | 1.00 | 0.83 | 3 of 3 |
+| `stages/test-catches-bug` | 0.8.0 | 1.00 | 0.92 | 3 of 3 |
+| `stages/build-one-phase` | 0.7.0 | 0.93 | 0.93 | 3 of 3 |
+| `build/next-phase-todos` | 0.7.0 | 1.00 | 1.00 | 3 of 3 |
 
-One unscored indicator moved. The Test case dispatched the `verifier` subagent in one of its three plugin runs, against two of three on 0.6.0, and all three runs still failed the right criterion. Three runs are too few to say whether the longer Test stage caused that.
+One unscored indicator moved. The Test case dispatched the `verifier` subagent in one of its three plugin runs on the 0.7.0 rerun, and again on the 0.8.0 rerun, against two of three on 0.6.0. Every one of those runs still failed the right criterion. The pattern has repeated, so the longer Test stage is the likely cause, and no trace was kept to confirm it.
 
-That rerun's [report](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/aggregate-result.json) are stored the same way. It cost $3.80 at list price.
+The reports are stored the same way: [0.7.0](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [0.8.0](docs/evals/2026-11-12-sonnet-5-5-spec-rfc-plan-test-0.8.0/report.html), each with its `aggregate-result.json` beside it. They cost $3.80 and $4.03 at list price.
 
 Two things help when reading the tables:
 

@@ -24,7 +24,7 @@ Feature: `$ARGUMENTS`
 
 5. **Route the concerns.** List each risk or policy concern with the person who owns that policy. Resolve every concern with its owner before approval, and record the outcome.
 
-6. **Set the risk level.** A change is high-risk when it touches auth, money, PII, data migrations or a public API. A high-risk spec needs the tech lead as an approver, and it never skips the RFC.
+6. **Set the risk level.** A change is high-risk when it touches auth, money, PII, data migrations or a public API. A high-risk spec needs the tech lead as an approver, and it never skips the RFC. A spec also keeps the RFC when a requirement says never, always, at most once or exactly once about ordering, retries, permissions or a rule table, because the RFC stage checks that claim against the design.
 
 7. **Gate.** The Goldfish review is `egm-review-loop` with the feature-spec standard, using the inputs in `egm.md`. Commit `spec.md`, its report and `sdlc.yaml` together.
 

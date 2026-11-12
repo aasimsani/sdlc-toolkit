@@ -6,7 +6,7 @@ argument-hint: "<slug> | <incident description> | drift"
 
 # Stage 9 — Maintain
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md` and `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/egm.md` and `${CLAUDE_PLUGIN_ROOT}/references/ponytail.md`. Its `drift` mode uses `${CLAUDE_PLUGIN_ROOT}/references/fv-toolkit.md` when the repo holds formal models.
 
 Maintain closes the loop. Whatever goes wrong after release becomes a new intent and starts again at stage 1.
 
@@ -30,10 +30,11 @@ Input: `$ARGUMENTS`
 
 ## For drift across features
 
-When the input is `drift`, run two checks:
+When the input is `drift`, run these checks:
 
 1. **Records against code.** Run `egm-drift-report` on `docs/sdlc/` to compare every ADR with the current code. Then let the user decide, divergence by divergence, whether the code or the record is wrong. A wrong record gets a superseding ADR through a new intent. Wrong code gets a new intent.
-2. **Over-engineering across features.** Run `ponytail:ponytail-audit` on the repo. It ranks what to delete or simplify across the whole tree, which catches complexity that built up feature by feature. Drop any cut that an ADR records as deliberate. The user picks the cuts worth making, and each one becomes a new intent, or one intent that groups them.
+2. **Models against code.** When the repo holds a formal model with a sync record, invoke `fv-toolkit:fv-maintain`, as `fv-toolkit.md` describes. It says whether each model still describes the code, and whether a failure is drift in the model or a bug in the code. A bug gets a new intent.
+3. **Over-engineering across features.** Run `ponytail:ponytail-audit` on the repo. It ranks what to delete or simplify across the whole tree, which catches complexity that built up feature by feature. Drop any cut that an ADR records as deliberate. The user picks the cuts worth making, and each one becomes a new intent, or one intent that groups them.
 
 ## For an incident or regression
 
