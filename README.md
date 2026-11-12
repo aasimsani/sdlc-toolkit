@@ -48,9 +48,10 @@ The loop has four explicit state machines, and each one keeps its state in a fil
 
 ### Who helps at each stage
 
-Each row is one stage. The dark box is the stage's skill and its artifact, and the boxes after it are the helpers it calls, in the order it calls them.
+Each row is one stage. The dark box is the stage's skill and its artifact, and the boxes after it are the helpers it calls, in the order it calls them. The approver can skip the two stages with a dashed border.
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 280}}}%%
 flowchart TB
     classDef stage fill:#1f2937,stroke:#111827,color:#ffffff
     classDef egm fill:#dbeafe,stroke:#1d4ed8,color:#111827
@@ -97,7 +98,9 @@ flowchart TB
         direction LR
         j0["sdlc:maintain<br/>lessons.md"]:::stage --> j1["Observability tools in the session<br/>read the live signal for each success criterion"]:::other --> j2["EGM egm-drift-report<br/>in drift mode, checks every ADR against the current code"]:::egm --> j3["ponytail-audit<br/>in drift mode, ranks what to delete across the repo"]:::pony
     end
-    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
+    S1 ==> S2 ==> S3 ==> S4 ==> S5 ==> S6 ==> S7 ==> S8 ==> S9
+    style S3 stroke-dasharray: 6 4
+    style S8 stroke-dasharray: 6 4
 ```
 
 | Colour | Helper | What it adds |
@@ -113,22 +116,35 @@ Every stage ends at the same gate, where a human approves the artifact. Superpow
 
 ### Paths between stages
 
-A feature's stage is the first one in `sdlc.yaml` that isn't approved or skipped. The thick arrows are approvals, and the thin arrows are the paths back.
+A feature's stage is the first one in `sdlc.yaml` that isn't approved or skipped. An arrow with no label is an approval.
 
 ```mermaid
-flowchart LR
-    classDef optional stroke-dasharray: 4 3
-    I([Intent]) ==> S([Spec]) ==> R([RFC]):::optional ==> P([Plan]) ==> B([Build]) ==> T([Test]) ==> H([Ship]) ==> A([ADR]):::optional ==> M([Maintain])
-    T -- "new phase" --> B
-    B -- "an earlier artifact is wrong" --> S
-    M -- "new feature" --> I
+stateDiagram-v2
+    [*] --> Intent
+    Intent --> Spec
+    Spec --> RFC
+    Spec --> Plan: the approver skips the RFC
+    RFC --> Plan
+    Plan --> Build
+    Build --> Build: the next phase
+    Build --> Spec: an earlier artifact is wrong
+    Build --> Test
+    Test --> Build: a criterion or a test fails
+    Test --> Ship
+    Ship --> Ship: fix a finding and push
+    Ship --> ADR
+    Ship --> Maintain: the RFC was skipped
+    ADR --> Maintain
+    Maintain --> Intent: a follow-up, an incident or drift
+    Maintain --> [*]: the feature is closed
 ```
 
-- The dashed stages can be skipped. The approver may skip a stage that adds nothing, and `sdlc.yaml` records the reason. A skipped RFC skips the ADR too. Build, Test and Ship are never skipped.
+- The approver may skip a stage that adds nothing, and `sdlc.yaml` records the reason. A skipped RFC skips the ADR too. Build, Test and Ship are never skipped.
+- Build runs one phase of `plan.md` at a time, and it's approved when every phase is done.
 - Test sends the feature back to Build as a new phase when a criterion fails, a test fails on the code, or the review has a blocking finding.
+- Ship fixes each blocking finding and pushes again until none is open. Then a human approves and merges.
 - When any stage finds that an earlier artifact is wrong, the artifact is fixed in its own commit and its stage goes back to draft. The arrow shows one case, where Build finds that a requirement has to change.
 - A follow-up, an incident or a drift finding starts a new feature at Intent.
-- Some loops stay inside one stage. Every stage repeats its review until a human approves. Build repeats once per phase, and Ship fixes each blocking finding and pushes again until none is open.
 
 ### One stage's status
 
@@ -151,6 +167,7 @@ stateDiagram-v2
 A phase in `plan.md` is `pending`, `in_progress` or `done`. Inside a phase the order is fixed. The tests fail first, and then the code makes them pass.
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 280}}}%%
 flowchart TB
     pending([pending]) -- "Build picks the phase and writes its todos" --> red
     subgraph ip["in_progress"]
@@ -200,6 +217,7 @@ stateDiagram-v2
 These loops are implicit too. Each one is a file that a stage leaves in the repo and that a later session reads.
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 280}}}%%
 flowchart LR
     l1["Every stage<br/>sdlc.yaml and the artifacts, in git"] --> r1["The status line at session start,<br/>so any session resumes at the right stage"]
     l2["Any stage, after the same mistake twice<br/>a lint rule, a test, a hook or a line in CLAUDE.md"] --> r2["Every later session in the repo"]
@@ -236,14 +254,14 @@ Three rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers 
 | A stage is approved only with its tools on record | Denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml` |
 
 ```mermaid
-flowchart LR
-    cmd(["Claude is about to run<br/>a Bash command"]) --> q1{"gh pr merge, or an<br/>approving gh pr review?"}
+flowchart TB
+    cmd(["Claude is about to run a Bash command"]) --> q1{"gh pr merge, or an approving gh pr review?"}
     q1 -- yes --> ask(["Ask the user"])
     q1 -- no --> q2{"git commit?"}
     q2 -- no --> allow(["Allow"])
-    q2 -- yes --> q3{"On the default<br/>branch?"}
+    q2 -- yes --> q3{"On the default branch?"}
     q3 -- yes --> deny1(["Deny"])
-    q3 -- no --> q4{"Does it approve a stage<br/>with a tool missing<br/>from sdlc.yaml?"}
+    q3 -- no --> q4{"Does it approve a stage with a tool missing from sdlc.yaml?"}
     q4 -- yes --> deny2(["Deny"])
     q4 -- no --> allow
 ```
