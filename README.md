@@ -20,7 +20,7 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
 | 9 | Maintain | `lessons.md` | `egm-drift-report`, `ponytail-audit` + live signals |
 
-`docs/sdlc/<slug>/sdlc.yaml` records each stage's status, owner and approver. A human approves every artifact. Claude never approves its own work, merges a PR, or deploys to production.
+`docs/sdlc/<slug>/sdlc.yaml` records each stage's status, owner and approver, and the tools the stage ran or skipped. A human approves every artifact. Claude never approves its own work, merges a PR, or deploys to production.
 
 ## Install
 
@@ -29,7 +29,7 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists, and it offers the gate hook.
+Then run `/sdlc:setup` in a repo. It installs EGM, pr-review and [ponytail](https://github.com/DietrichGebert/ponytail) if they're missing. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
 
 ## Use
 
@@ -48,6 +48,7 @@ Claude loads this plugin's text in layers, so a session only pays for what the c
 
 | Layer | Files | Loaded |
 |---|---|---|
+| Status line | One line per feature in flight, printed by `hooks/hooks.json` | At session start, and only in a repo that has `docs/sdlc/` |
 | Skill descriptions | The frontmatter of each `skills/<stage>/SKILL.md` | In every session, about 1,500 tokens in total |
 | One stage | `skills/<stage>/SKILL.md`, with its steps and its artifact template | When that stage runs |
 | Rules every stage shares | `references/stage-rules.md` | At the start of each stage |
@@ -58,12 +59,15 @@ Each rule that spans stages lives in one file, and `tests/test_structure.sh` fai
 
 ## Gate hook
 
-Two rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers a hook for them. It copies [`scripts/sdlc-gate.sh`](plugins/sdlc/scripts/sdlc-gate.sh) into the repo's `.claude/hooks/` and registers it in `.claude/settings.json`.
+Three rules shouldn't depend on Claude following prose, so `/sdlc:setup` offers a hook for them. It copies [`scripts/sdlc-gate.sh`](plugins/sdlc/scripts/sdlc-gate.sh) into the repo's `.claude/hooks/` and registers it in `.claude/settings.json`.
 
 | Rule | What the hook does |
 |---|---|
 | Nothing commits on the default branch | Denies `git commit` there, and tells Claude to switch to the feature branch |
 | A human approves and merges each PR | Makes Claude Code ask the user before `gh pr merge` or an approving `gh pr review`. In a headless run the ask becomes a denial. |
+| A stage is approved only with its tools on record | Denies a commit that approves a stage while one of the stage's tools has no file and no skip reason in `sdlc.yaml` |
+
+Each stage has a short list of tools it must account for, such as the Goldfish review, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason.
 
 The hook is opt-in per repo, and it's a file the team can read and change. To gate another command, such as a production deploy, add a rule to the copy in the repo.
 
@@ -97,7 +101,7 @@ The table in [`references/egm.md`](plugins/sdlc/references/egm.md) says which EG
 
 - **Swap or add a reviewer.** Change a stage's `Reviewers` list. EGM ships `egm-design`, `egm-codebase-details`, `egm-comprehension`, `egm-implementation-readiness`, `egm-structural`, `egm-style`, `egm-zoom-out` and `egm-inventive-catalyst`.
 - **Add a standard.** `egm-review-loop` takes a standard's short name or a path. Write a team standard as a markdown file, for example `docs/sdlc/standards/api-standard.md`, and map a reviewer to its path in the stage's `Standards`.
-- **Skip a review for one feature.** The approver records `goldfish: skipped` with a reason in `sdlc.yaml`.
+- **Skip a review for one feature.** The skip goes in the stage's `tools` entry in `sdlc.yaml`, with its reason. `stage-rules.md` has the format.
 
 ### Policies
 
@@ -107,6 +111,7 @@ The Spec stage applies every policy skill in the session, such as security, comp
 
 - **Change an artifact's shape.** Edit the template at the bottom of the stage's `SKILL.md`.
 - **Add a stage.** Add `plugins/sdlc/skills/<stage>/SKILL.md` that reads `references/stage-rules.md` and ends with its gate. Then add a row to the stage table in `skills/sdlc/SKILL.md`, which the router reads in order.
+- **Teach the verifier your app.** `/sdlc:setup` offers a project skill at `.claude/skills/verify-<app>/` that says how to launch and drive the app. The Test stage's verifier reads it, and each feature adds its own file to it.
 - **Swap a tool.** Each tool has its own file under `references/`, and each stage names the ones it uses in its first paragraph. For example, the RFC stage uses the `rfc` skill when it's installed, and `egm-draft` when it isn't.
 
 After editing the plugin, bump `version` in `plugins/sdlc/.claude-plugin/plugin.json` and run `claude plugin update sdlc@sdlc-toolkit`.
@@ -117,7 +122,7 @@ The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start seve
 
 ## Evals
 
-`plugins/sdlc/evals/` holds sixteen behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
+`plugins/sdlc/evals/` holds seventeen behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
 
 The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](plugins/sdlc/evals/_lib/lifecycle.sh). It builds a small shell project and takes one feature, `csv-export`, as far through the loop as the case needs. Each of those cases starts where a real stage starts, with the earlier artifacts approved, and its graders check what the next stage or the approver needs from it.
 
@@ -139,19 +144,52 @@ The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](p
 | `gate/approved-intent-on-branch` | With the approver's sign-off given up front, the intent is committed on a feature branch and nothing lands on `main` |
 | `build/next-phase-todos` | Starting a phase marks it `in_progress` and writes todos for that phase only |
 | `no-trigger/git-question` | A plain git question doesn't start the loop |
+| `no-trigger/git-question-in-sdlc-repo` | The same question doesn't start the loop in a repo that has features in flight |
 
 ```bash
 cd plugins/sdlc
 claude plugin eval . --scaffold --allow-tools Bash Write Edit --model claude-sonnet-5-5 --judge-model claude-sonnet-5-5
 ```
 
-Each case runs three times with the plugin and three times without it, so a full run is 96 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, `--tag stage` to run one group, and `--max-cost-usd <n>` to cap the spend. Eval sessions skip your user settings, so they use Claude Code's default model unless you pass `--model`.
+Each case runs three times with the plugin and three times without it, so a full run is 102 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, `--tag stage` to run one group, and `--max-cost-usd <n>` to cap the spend. Eval sessions skip your user settings, so they use Claude Code's default model unless you pass `--model`.
 
 The suite has three limits:
 
 - EGM, pr-review, ponytail and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run or a written RFC.
 - The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
+
+### Scores
+
+The last full run was on 2026-11-12. It tested plugin version 0.6.0 on Claude Code 2.1.322, with Claude Sonnet 5.5 as the model under test and as the judge. Each case ran three times with the plugin and three times without it. A score is the weighted share of a run's graders that passed, averaged over the three runs.
+
+| Case | With plugin | Without | Runs that invoked a skill |
+|---|---|---|---|
+| `setup/fresh-repo` | 1.00 | 0.80 | 3 of 3 |
+| `route/status-board` | 1.00 | 1.00 | 0 of 3 |
+| `stages/spec-from-intent` | 1.00 | 0.57 | 3 of 3 |
+| `stages/rfc-skip` | 1.00 | 0.62 | 3 of 3 |
+| `stages/plan-from-rfc` | 1.00 | 0.79 | 3 of 3 |
+| `stages/build-one-phase` | 0.93 | 0.93 | 3 of 3 |
+| `stages/test-catches-bug` | 1.00 | 0.92 | 3 of 3 |
+| `stages/ship-opens-pr` | 1.00 | 0.67 | 3 of 3 |
+| `stages/adr-records-what-shipped` | 1.00 | 0.92 | 3 of 3 |
+| `stages/maintain-closes-loop` | 1.00 | 0.92 | 3 of 3 |
+| `modes/review-records-decision` | 0.96 | 1.00 | 3 of 3 |
+| `gate/draft-intent-blocks-spec` | 1.00 | 0.33 | 3 of 3 |
+| `gate/no-self-approval` | 1.00 | 1.00 | 3 of 3 |
+| `gate/approved-intent-on-branch` | 1.00 | 0.62 | 3 of 3 |
+| `build/next-phase-todos` | 1.00 | 1.00 | 3 of 3 |
+| `no-trigger/git-question` | 1.00 | 1.00 | none, as intended |
+| `no-trigger/git-question-in-sdlc-repo` | 1.00 | 1.00 | none, as intended |
+| **Mean of 17 cases** | **0.99** | **0.83** | 42 of 45 |
+
+The run's [report](docs/evals/2026-11-12-sonnet-5-5/report.html) shows every grader's verdict for every run, and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5/aggregate-result.json) holds the same data. Both files are as `claude plugin eval` wrote them, except that the home directory in two paths is shortened to `~`. The run cost $12.98 at list price.
+
+Two things help when reading the table:
+
+- Three runs per arm is a small sample, so a gap of 0.1 between two cases or two runs means little.
+- `route/status-board` scores 1.00 with no skill invoked, because the status line at session start already holds the answer.
 
 ## Develop
 
