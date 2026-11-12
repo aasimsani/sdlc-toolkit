@@ -190,7 +190,17 @@ The last full run was on 2026-11-12. It tested plugin version 0.6.0 on Claude Co
 
 The run's [report](docs/evals/2026-11-12-sonnet-5-5/report.html) shows every grader's verdict for every run, and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5/aggregate-result.json) holds the same data. Both files are as `claude plugin eval` wrote them, except that the home directory in two paths is shortened to `~`. The run cost $12.98 at list price.
 
-Two things help when reading the table:
+Version 0.7.0 changed the Build and Test stages, so the three cases that run those stages ran again on 2026-11-12 with the same models and the same Claude Code version. The other fourteen rows above are from the 0.6.0 run. The testing toolkit isn't loaded in an eval run, so this rerun shows only that the two stages behave as before without it.
+
+| Case | With plugin | Without | Runs that invoked a skill |
+|---|---|---|---|
+| `stages/build-one-phase` | 0.93 | 0.79 | 3 of 3 |
+| `stages/test-catches-bug` | 1.00 | 0.92 | 3 of 3 |
+| `build/next-phase-todos` | 1.00 | 1.00 | 3 of 3 |
+
+That rerun's [report](docs/evals/2026-11-12-sonnet-5-5-build-and-test-0.7.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-build-and-test-0.7.0/aggregate-result.json) are stored the same way. It cost $2.34 at list price.
+
+Two things help when reading the tables:
 
 - Three runs per arm is a small sample, so a gap of 0.1 between two cases or two runs means little.
 - `route/status-board` scores 1.00 with no skill invoked, because the status line at session start already holds the answer.

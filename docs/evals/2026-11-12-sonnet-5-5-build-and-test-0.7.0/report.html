@@ -1,0 +1,1933 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — sdlc v0.7.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>sdlc v0.7.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-pos">↑ +7.5 pts</span> vs baseline — improved 2 · flat 1 · regressed 0 of 3 cases.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.322</span>
+<span class="num">2026-11-12 20:41 UTC</span>
+<span class="num">8m 24s</span>
+<span class="num">$2.34</span>
+<span class="num">18 runs</span>
+
+
+<span>model claude-sonnet-5-5</span>
+<span>judge claude-sonnet-5-5</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --tag build --tag test</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">97.6%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-pos">↑ +7.5</span><span class="sub">score points vs baseline, 3 of 3 cases</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">90.1%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">3</span><span class="sub">2 of 3 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">88.9%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>next-phase-todos</h2>
+<span class="muted mono">evals/build/next-phase-todos</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">9 turns · $0.10 · 20:41:21 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 2x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">9 turns · $0.09 · 20:41:34 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">8 turns · $0.09 · 20:41:47 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">7 turns · $0.06 · 20:41:57 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">9 turns · $0.07 · 20:42:07 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">7 turns · $0.06 · 20:42:21 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-todos-for-phase-3</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-in-progress</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*2\s*\|[^\n]*\|\s*in_progress\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-3-still-pending</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (^|\n)\|\s*3\s*\|[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-for-phase-2</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ## Todos[\s\S]*### Phase 2[^\n]*\n[\s\S]*?- \[ \]</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Start the next phase of the bulk-export build. Get plan.md ready for it, then stop before you write any test or code.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-todos-for-phase-3</span><span class="badge">regex</span><span class="muted">weight ×2</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/bulk-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;## Todos[\\s\\S]*### Phase 3&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">phase-2-in-progress</span><span class="badge">regex</span><span class="muted">weight ×2</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/bulk-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;(^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">phase-3-still-pending</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/bulk-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;(^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?(?:sdlc|build)\&quot;&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">todos-for-phase-2</span><span class="badge">regex</span><span class="muted">weight ×2</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/bulk-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-2">
+<div class="case-head">
+<h2>build-one-phase</h2>
+<span class="muted mono">evals/stages/build-one-phase</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +14.3 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:92.9%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">92.9%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:92.9%"></span></span>
+<span class="num">92.9%</span>
+<span class="muted num">66.7% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:78.6%"></span></span>
+<span class="num">78.6%</span>
+<span class="muted num">14 turns · $0.17 · 20:42:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file .test-log</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (?:\tcommit: [^\n]*\n[\s\S]*?){7}</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">11 turns · $0.13 · 20:42:53 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched FAIL - [^\n]*csv[^\n]*\n[\s\S]*ok - [^\n]*csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (?:\tcommit: [^\n]*\n[\s\S]*?){7}</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">11 turns · $0.12 · 20:43:16 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched FAIL - [^\n]*csv[^\n]*\n[\s\S]*ok - [^\n]*csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched (?:\tcommit: [^\n]*\n[\s\S]*?){7}</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:78.6%"></span></span>
+<span class="num">78.6%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:92.9%"></span></span>
+<span class="num">92.9%</span>
+<span class="muted num">8 turns · $0.11 · 20:43:36 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched FAIL - [^\n]*csv[^\n]*\n[\s\S]*ok - [^\n]*csv</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file .git/logs/HEAD</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:71.4%"></span></span>
+<span class="num">71.4%</span>
+<span class="muted num">10 turns · $0.11 · 20:43:57 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file .test-log</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file .git/logs/HEAD</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:71.4%"></span></span>
+<span class="num">71.4%</span>
+<span class="muted num">8 turns · $0.10 · 20:44:19 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">csv-option-added</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched --csv</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">no-phase-2-code</span>  </summary>
+<div class="grader-body">
+<p class="explanation">lib/** absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">nothing-on-main</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">pattern absent as expected</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">phase-2-still-pending</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*2\s*\|\s*Quoting[^\n]*\|\s*pending\s*\|</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">red-before-green</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">grader threw: case &quot;build-one-phase&quot; grader focus file &quot;.test-log&quot;: path &quot;.test-log&quot; does not exist</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">test-and-code-commits</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file .git/logs/HEAD</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">todos-checked-off</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched - \[x\]</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-green-with-new-tests</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">matched ^(?:[4-9]|\d\d+) passed, 0 failed</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Build phase 1 of csv-export, and stop when that phase is finished. pr-review, ponytail and the testing toolkit aren't installed on this machine, so carry on without them.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">csv-option-added</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;bin/invoices&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;--csv&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">no-phase-2-code</span><span class="badge">file_exists</span></div>
+<div class="config"><div class="kv"><span>path</span><code>&quot;lib/**&quot;</code></div><div class="kv"><span>exists</span><code>false</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">nothing-on-main</span><span class="badge">regex</span><span class="muted">weight ×2</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;.git/logs/refs/heads/main&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;\\t(commit|commit \\(amend\\)|merge[^:]*): &quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;not_contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">phase-2-still-pending</span><span class="badge">regex</span><span class="muted">weight ×2</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/csv-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;\\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">red-before-green</span><span class="badge">regex</span><span class="muted">weight ×3</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;.test-log&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;FAIL - [^\\n]*csv[^\\n]*\\n[\\s\\S]*ok - [^\\n]*csv&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?(?:sdlc|build)\&quot;&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">test-and-code-commits</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;.git/logs/HEAD&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;(?:\\tcommit: [^\\n]*\\n[\\s\\S]*?){7}&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">todos-checked-off</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/csv-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;- \\[x\\]&quot;</code></div><div class="kv"><span>flags</span><code>&quot;i&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">verify-green-with-new-tests</span><span class="badge">regex</span><span class="muted">weight ×3</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;.verify-last&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;^(?:[4-9]|\\d\\d+) passed, 0 failed&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-3">
+<div class="case-head">
+<h2>test-catches-bug</h2>
+<span class="muted mono">evals/stages/test-catches-bug</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +8.3 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">8 turns · $0.14 · 20:44:39 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*3\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: FAILED, sent back to Build. Not approved.
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes. `bin/invoices list --csv` printed the header and four rows. | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv ...&quot; passes. The output was the header and INV-001, INV-003, INV-004. | pass |
+| AC3 | Output was `INV-004,Initech &quot;West&quot;,4500.00,open`. The spec wants `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. No test covers it. | **fail** |
+| AC4 | `tests/test_list.sh` passes, but it checks line counts and not bytes. I did not compare against the pre-change output. | not proven |
+| AC5 | No test exists. A manual 2,000-invoice run took 0.013 s. That file&apos;s quoted fields were malformed, as in AC3. | timing ok, untested |
+
+## Tests
+- Report: none. The testing toolkit isn&apos;t installed, so that step was skipped.
+- Tests added in this stage: none
+
+## Verifier report
+Not run. I exercised the criteria directly instead. Run the verifier after the fix.
+
+## pr-review
+Not run. pr-review isn&apos;t installed on this machine.
+
+## Gaps
+- `plan.md` lists tests for the AC3 double-quote case and AC5. Neither is in `tests/test_csv.sh`, and Build marked phase 2 done.
+- `lib/csv.awk` was dropped, with Lee&apos;s agreement, and `plan.md` records that. The quoting bug lives in the inline awk.
+- No UI, no agent evals in this diff.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: FAILED, sent back to Build. Not approved.
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes. `bin/invoices list --csv` printed the header and four rows. | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv ...&quot; passes. The output was the header and INV-001, INV-003, INV-004. | pass |
+| AC3 | Output was `INV-004,Initech &quot;West&quot;,4500.00,open`. The spec wants `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. No test covers it. | **fail** |
+| AC4 | `tests/test_list.sh` passes, but it checks line counts and not bytes. I did not compare against the pre-change output. | not proven |
+| AC5 | No test exists. A manual 2,000-invoice run took 0.013 s. That file&apos;s quoted fields were malformed, as in AC3. | timing ok, untested |
+
+## Tests
+- Report: none. The testing toolkit isn&apos;t installed, so that step was skipped.
+- Tests added in this stage: none
+
+## Verifier report
+Not run. I exercised the criteria directly instead. Run the verifier after the fix.
+
+## pr-review
+Not run. pr-review isn&apos;t installed on this machine.
+
+## Gaps
+- `plan.md` lists tests for the AC3 double-quote case and AC5. Neither is in `tests/test_csv.sh`, and Build marked phase 2 done.
+- `lib/csv.awk` was dropped, with Lee&apos;s agreement, and `plan.md` records that. The quoting bug lives in the inline awk.
+- No UI, no agent evals in this diff.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">verifier-dispatched</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Agent called 0x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">6 turns · $0.39 · 20:45:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*3\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: **FAILED — AC3 fails; sent back to Build (plan.md Phase 3).**
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+The suite is green only because the tests for AC3&apos;s double-quote row and AC5 were never written (see Gaps).
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes; verifier saw header plus four rows | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv keeps the header and the three open invoices&quot; passes; verifier saw header plus three open rows | pass |
+| AC3 | No test for the quote row. `bin/invoices list --csv` printed `INV-004,Initech &quot;West&quot;,4500.00,open`; spec requires `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. The `INV-002` row matches. A field with a comma and a quote (`Foo, &quot;Bar&quot; Inc.`) came out as `&quot;Foo, &quot;Bar&quot; Inc.&quot;`, which Python&apos;s csv module parses as a corrupted field | **FAIL** |
+| AC4 | `tests/test_list.sh` (3 checks) passes; verifier inspected the non-CSV branch. No byte-for-byte diff against the pre-change output (git unusable in this sandbox) | pass (inspection only) |
+| AC5 | No test. Manual run with a 2,000-invoice file in `$TMPDIR`: `bin/invoices list --csv` took 0.013 s total, 2001 output lines | pass (manual only) |
+
+## Tests
+- Report: none. The testing toolkit isn&apos;t installed, so this step was skipped.
+- Done when: not applicable.
+- Tests added in this stage: none. Phase 3 adds them.
+
+## Verifier report
+Summary: AC1, AC2 pass. AC3 fails: `bin/invoices` quotes a field only if it contains a comma (`if ($i ~ /,/)`), never doubles embedded quotes and never quotes a quote-only field. AC4 passes by inspection only because git is unusable in the sandbox. AC5 passes manually at 0.013 s. `plan.md` lists the tests &quot;a customer with a double quote is quoted&quot; and &quot;2,000 invoices export in under 5 seconds&quot; in `tests/test_csv.sh`, but the file holds only three checks and neither exists. The quoting is inline in `bin/invoices` (lines 18–24), matching the departure recorded in plan.md; `lib/csv.awk` doesn&apos;t exist.
+
+Full report is in the Test-stage session transcript; the AC table above carries its literal outputs.
+
+## pr-review
+- Skipped: pr-review isn&apos;t installed on this machine.
+
+## Gaps
+- AC3 fails (above).
+- Missing tests: &quot;a customer with a double quote is quoted&quot; (AC3) and &quot;2,000 invoices export in under 5 seconds&quot; (AC5), both listed in plan.md.
+- AC4 has no byte-for-byte comparison with the pre-change output.
+- No testing-toolkit or pr-review run; no UI to check.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: **FAILED — AC3 fails; sent back to Build (plan.md Phase 3).**
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+The suite is green only because the tests for AC3&apos;s double-quote row and AC5 were never written (see Gaps).
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes; verifier saw header plus four rows | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv keeps the header and the three open invoices&quot; passes; verifier saw header plus three open rows | pass |
+| AC3 | No test for the quote row. `bin/invoices list --csv` printed `INV-004,Initech &quot;West&quot;,4500.00,open`; spec requires `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. The `INV-002` row matches. A field with a comma and a quote (`Foo, &quot;Bar&quot; Inc.`) came out as `&quot;Foo, &quot;Bar&quot; Inc.&quot;`, which Python&apos;s csv module parses as a corrupted field | **FAIL** |
+| AC4 | `tests/test_list.sh` (3 checks) passes; verifier inspected the non-CSV branch. No byte-for-byte diff against the pre-change output (git unusable in this sandbox) | pass (inspection only) |
+| AC5 | No test. Manual run with a 2,000-invoice file in `$TMPDIR`: `bin/invoices list --csv` took 0.013 s total, 2001 output lines | pass (manual only) |
+
+## Tests
+- Report: none. The testing toolkit isn&apos;t installed, so this step was skipped.
+- Done when: not applicable.
+- Tests added in this stage: none. Phase 3 adds them.
+
+## Verifier report
+Summary: AC1, AC2 pass. AC3 fails: `bin/invoices` quotes a field only if it contains a comma (`if ($i ~ /,/)`), never doubles embedded quotes and never quotes a quote-only field. AC4 passes by inspection only because git is unusable in the sandbox. AC5 passes manually at 0.013 s. `plan.md` lists the tests &quot;a customer with a double quote is quoted&quot; and &quot;2,000 invoices export in under 5 seconds&quot; in `tests/test_csv.sh`, but the file holds only three checks and neither exists. The quoting is inline in `bin/invoices` (lines 18–24), matching the departure recorded in plan.md; `lib/csv.awk` doesn&apos;t exist.
+
+Full report is in the Test-stage session transcript; the AC table above carries its literal outputs.
+
+## pr-review
+- Skipped: pr-review isn&apos;t installed on this machine.
+
+## Gaps
+- AC3 fails (above).
+- Missing tests: &quot;a customer with a double quote is quoted&quot; (AC3) and &quot;2,000 invoices export in under 5 seconds&quot; (AC5), both listed in plan.md.
+- AC4 has no byte-for-byte comparison with the pre-change output.
+- No testing-toolkit or pr-review run; no UI to check.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verifier-dispatched</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Agent called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">9 turns · $0.16 · 20:47:24 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched \|\s*3\s*\|</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: **failed. AC3 fails and AC3/AC5 have no test. Sent back to Build (plan phase 3).**
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes. Direct run printed the header and four rows. | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv ...&quot; passes. Direct run printed the header and INV-001, INV-003, INV-004. | pass |
+| AC3 | Direct run printed `INV-004,Initech &quot;West&quot;,4500.00,open`. Expected `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. The awk only quotes fields containing a comma. | **FAIL** |
+| AC4 | `old/bin/invoices list` (from `main`) and the new `bin/invoices list` compared with `cmp`: identical bytes. `tests/test_list.sh` passes. | pass |
+| AC5 | No test exists. Manual run, 2,000 rows: 0.012 s, 2001 lines. The input had no quote characters. | pass (manual only) |
+
+AC3 detail: `bin/invoices` line `if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;` ignores double quotes. The &quot;double quote&quot; test the plan lists for AC3 was never written, so the suite stayed green.
+
+## Tests
+- Testing toolkit: not run. Not installed on this machine, skipped at the user&apos;s instruction.
+- Tests missing from `tests/test_csv.sh`: &quot;a customer with a double quote is quoted&quot; (AC3) and &quot;2,000 invoices export in under 5 seconds&quot; (AC5). The plan lists both.
+
+## Verifier report
+Not run. I checked each criterion directly in this session instead, so this is not a fresh-context check.
+
+## pr-review
+Not run. Not installed on this machine, skipped at the user&apos;s instruction. No Net line.
+
+## Gaps
+- AC3 fails (above).
+- AC5 is only checked by hand, and the input had no quotes or commas.
+- No UI, no agent evals (diff doesn&apos;t touch CLAUDE.md, .claude or skills).
+- Verifier, testing toolkit and pr-review are not run, so `tools` in sdlc.yaml can&apos;t be filled for the Test stage.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Status: **failed. AC3 fails and AC3/AC5 have no test. Sent back to Build (plan phase 3).**
+
+## Verify command
+`sh verify.sh`
+
+```
+ok - list --csv prints the header and four rows
+ok - --status open --csv keeps the header and the three open invoices
+ok - a customer with a comma is quoted
+ok - list prints the header and all four invoices
+ok - --status open keeps the header and the three open invoices
+ok - an unknown option exits 2
+6 passed, 0 failed
+```
+
+## Acceptance criteria
+| Id | Evidence | Result |
+|---|---|---|
+| AC1 | `tests/test_csv.sh` &quot;list --csv prints the header and four rows&quot; passes. Direct run printed the header and four rows. | pass |
+| AC2 | `tests/test_csv.sh` &quot;--status open --csv ...&quot; passes. Direct run printed the header and INV-001, INV-003, INV-004. | pass |
+| AC3 | Direct run printed `INV-004,Initech &quot;West&quot;,4500.00,open`. Expected `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open`. The awk only quotes fields containing a comma. | **FAIL** |
+| AC4 | `old/bin/invoices list` (from `main`) and the new `bin/invoices list` compared with `cmp`: identical bytes. `tests/test_list.sh` passes. | pass |
+| AC5 | No test exists. Manual run, 2,000 rows: 0.012 s, 2001 lines. The input had no quote characters. | pass (manual only) |
+
+AC3 detail: `bin/invoices` line `if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;` ignores double quotes. The &quot;double quote&quot; test the plan lists for AC3 was never written, so the suite stayed green.
+
+## Tests
+- Testing toolkit: not run. Not installed on this machine, skipped at the user&apos;s instruction.
+- Tests missing from `tests/test_csv.sh`: &quot;a customer with a double quote is quoted&quot; (AC3) and &quot;2,000 invoices export in under 5 seconds&quot; (AC5). The plan lists both.
+
+## Verifier report
+Not run. I checked each criterion directly in this session instead, so this is not a fresh-context check.
+
+## pr-review
+Not run. Not installed on this machine, skipped at the user&apos;s instruction. No Net line.
+
+## Gaps
+- AC3 fails (above).
+- AC5 is only checked by hand, and the input had no quotes or commas.
+- No UI, no agent evals (diff doesn&apos;t touch CLAUDE.md, .claude or skills).
+- Verifier, testing toolkit and pr-review are not run, so `tools` in sdlc.yaml can&apos;t be filled for the Test stage.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">verifier-dispatched</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Agent called 0x (expected 1..∞)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:91.7%"></span></span>
+<span class="num">91.7%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:91.7%"></span></span>
+<span class="num">91.7%</span>
+<span class="muted num">8 turns · $0.14 · 20:47:58 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file docs/sdlc/csv-export/plan.md</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — test evidence
+
+Verdict: **not ready for approval.** AC3 fails, and no automated test catches it.
+
+Tested on branch `sam/csv-export` at e37b399. Each criterion in `spec.md` was run by hand against `bin/invoices`, in addition to `sh verify.sh`.
+
+Not run: pr-review and the testing toolkit, which aren&apos;t installed on this machine. Nothing in this document comes from either.
+
+## Results
+
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | Header plus four rows for the sample data | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. |
+| AC2 | `--status open --csv` prints the header and the three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` | **Fail** | The INV-002 row matches. INV-004 is printed as `INV-004,Initech &quot;West&quot;,4500.00,open`. `grep -xF` for the spec&apos;s row found nothing. |
+| AC4 | `bin/invoices list` output unchanged | Pass | I extracted `bin/invoices` from `a83d6d1^`, the commit before Build, and ran it against the same data. Output was byte-identical (`cmp`) for `list`, `list --status open` and `list --status paid`. |
+| AC5 | 2,000 invoices export in under 5 seconds | Pass, but untested in the suite | I built a 2,000-invoice file and set `INVOICES_FILE` to it. `list --csv` printed 2,001 lines in 0.014 s. |
+
+## The AC3 failure
+
+`bin/invoices` only quotes a field that contains a comma:
+
+```
+for (i = 1; i &lt;= NF; i++) if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;
+```
+
+R3 also requires quoting a field that contains a double quote, and doubling each inner quote. The code does neither. A spreadsheet reads `Initech &quot;West&quot;` unquoted as a malformed row, which is the kind of mistake Finance is trying to stop making.
+
+A field with both a comma and a quote has the same gap. Its embedded quotes aren&apos;t doubled either.
+
+## Test suite gaps
+
+`sh verify.sh` reports `6 passed, 0 failed`. That result is accurate but doesn&apos;t cover the failure above.
+
+- `plan.md` maps AC3 to two tests: &quot;a customer with a comma is quoted&quot; and &quot;a customer with a double quote is quoted&quot;. Only the first exists in `tests/test_csv.sh`. That is why the suite is green with AC3 broken.
+- `plan.md` maps AC5 to a test, &quot;2,000 invoices export in under 5 seconds&quot;. `tests/test_csv.sh` doesn&apos;t contain it. The Build stage marked Phase 2 done without it.
+- The AC4 checks in `tests/test_list.sh` count lines. They don&apos;t compare bytes, so they don&apos;t prove R4. The byte comparison above does.
+
+## Needed before Test can be approved
+
+1. Fix the quoting in `bin/invoices` so a field with a double quote is wrapped and its inner quotes are doubled.
+2. Add the two missing tests from the plan, the double-quote test and the 2,000-invoice timing test. Watch the double-quote test fail first.
+3. Re-run `sh verify.sh` and re-check AC3 against the spec&apos;s exact rows.
+
+## Departures from the plan, for Lee
+
+The plan records two departures, which Lee has already agreed to: the quoting is inline rather than in `lib/csv.awk`, and both phases went in one PR. Neither affects the result above.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — test evidence
+
+Verdict: **not ready for approval.** AC3 fails, and no automated test catches it.
+
+Tested on branch `sam/csv-export` at e37b399. Each criterion in `spec.md` was run by hand against `bin/invoices`, in addition to `sh verify.sh`.
+
+Not run: pr-review and the testing toolkit, which aren&apos;t installed on this machine. Nothing in this document comes from either.
+
+## Results
+
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | Header plus four rows for the sample data | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. |
+| AC2 | `--status open --csv` prints the header and the three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` | **Fail** | The INV-002 row matches. INV-004 is printed as `INV-004,Initech &quot;West&quot;,4500.00,open`. `grep -xF` for the spec&apos;s row found nothing. |
+| AC4 | `bin/invoices list` output unchanged | Pass | I extracted `bin/invoices` from `a83d6d1^`, the commit before Build, and ran it against the same data. Output was byte-identical (`cmp`) for `list`, `list --status open` and `list --status paid`. |
+| AC5 | 2,000 invoices export in under 5 seconds | Pass, but untested in the suite | I built a 2,000-invoice file and set `INVOICES_FILE` to it. `list --csv` printed 2,001 lines in 0.014 s. |
+
+## The AC3 failure
+
+`bin/invoices` only quotes a field that contains a comma:
+
+```
+for (i = 1; i &lt;= NF; i++) if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;
+```
+
+R3 also requires quoting a field that contains a double quote, and doubling each inner quote. The code does neither. A spreadsheet reads `Initech &quot;West&quot;` unquoted as a malformed row, which is the kind of mistake Finance is trying to stop making.
+
+A field with both a comma and a quote has the same gap. Its embedded quotes aren&apos;t doubled either.
+
+## Test suite gaps
+
+`sh verify.sh` reports `6 passed, 0 failed`. That result is accurate but doesn&apos;t cover the failure above.
+
+- `plan.md` maps AC3 to two tests: &quot;a customer with a comma is quoted&quot; and &quot;a customer with a double quote is quoted&quot;. Only the first exists in `tests/test_csv.sh`. That is why the suite is green with AC3 broken.
+- `plan.md` maps AC5 to a test, &quot;2,000 invoices export in under 5 seconds&quot;. `tests/test_csv.sh` doesn&apos;t contain it. The Build stage marked Phase 2 done without it.
+- The AC4 checks in `tests/test_list.sh` count lines. They don&apos;t compare bytes, so they don&apos;t prove R4. The byte comparison above does.
+
+## Needed before Test can be approved
+
+1. Fix the quoting in `bin/invoices` so a field with a double quote is wrapped and its inner quotes are doubled.
+2. Add the two missing tests from the plan, the double-quote test and the 2,000-invoice timing test. Watch the double-quote test fail first.
+3. Re-run `sh verify.sh` and re-check AC3 against the spec&apos;s exact rows.
+
+## Departures from the plan, for Lee
+
+The plan records two departures, which Lee has already agreed to: the quoting is inline rather than in `lib/csv.awk`, and both phases went in one PR. Neither affects the result above.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:91.7%"></span></span>
+<span class="num">91.7%</span>
+<span class="muted num">7 turns · $0.15 · 20:48:34 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file docs/sdlc/csv-export/plan.md</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Verdict: **not ready to approve.** AC3 fails. R3 (doubling inner double quotes) isn&apos;t implemented. The other four criteria pass.
+
+Spec: `spec.md` (approved by Lee, 2026-11-03). Code under test: `sam/csv-export` at 71fa09f.
+
+## Scope of this run
+- Run: `sh verify.sh`, plus a manual check of each acceptance criterion against the real command.
+- Not run: `pr-review` and the testing toolkit. Neither is installed on this machine.
+
+## Results
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | `list --csv` prints the header and four rows | Pass | Output is `id,customer,amount,status` plus INV-001 to INV-004. |
+| AC2 | `list --status open --csv` prints the header and three open invoices | Pass | Header plus INV-001, INV-003 and INV-004. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` appear | **Fail** | INV-002 matches. INV-004 prints as `INV-004,Initech &quot;West&quot;,4500.00,open`. `grep -xF` for the expected row finds nothing. |
+| AC4 | `list` prints the same bytes as before | Pass | `cmp` against `bin/invoices` at the base commit 7f48244, run on the same data: identical for `list` and for `list --status open`. |
+| AC5 | A 2,000-invoice export finishes in under 5 seconds | Pass | A generated 2,000-invoice file (with commas and quotes in names) exported in 0.012 s, 2,001 lines. |
+
+Non-functional: no new dependency. `bin/invoices` uses only POSIX shell and awk.
+
+## Cause of the AC3 failure
+In `bin/invoices`, the csv branch has `if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;`. It checks only for a comma. It never checks for a double quote, and it never doubles inner quotes. A name like `Initech &quot;West&quot;` therefore goes out unquoted, and a spreadsheet will misread that row. A name with both a comma and a quote would be wrapped but its inner quotes would stay single. I did not change the code. Fixing it belongs to Build.
+
+## Test gaps
+`verify.sh` reports `6 passed, 0 failed`, but that result hides the AC3 failure.
+- `plan.md` maps AC3 to a &quot;a customer with a double quote is quoted&quot; test. That test doesn&apos;t exist in `tests/test_csv.sh`, so nothing catches the bug.
+- `plan.md` maps AC5 to a &quot;2,000 invoices export in under 5 seconds&quot; test. That test doesn&apos;t exist either. I checked AC5 by hand only.
+- The `tests/test_list.sh` checks count lines, not bytes, so AC4 isn&apos;t proven by the suite. I compared bytes against the base commit by hand.
+
+## Departures from the spec and plan
+- No `lib/csv.awk`. Quoting is inline in `bin/invoices`. The plan records this as a departure that Lee agreed to on 2026-11-06, so I did not flag it.
+- One PR instead of the RFC&apos;s two. This is also recorded in the plan.
+
+## What to do next
+1. Build: make the quoting wrap a field that contains a comma or a double quote, and double each inner quote.
+2. Add the two missing tests (double quote, 2,000 invoices) and a byte-for-byte AC4 check.
+3. Re-run this stage. Lee shouldn&apos;t approve Test until AC3 passes.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Verdict: **not ready to approve.** AC3 fails. R3 (doubling inner double quotes) isn&apos;t implemented. The other four criteria pass.
+
+Spec: `spec.md` (approved by Lee, 2026-11-03). Code under test: `sam/csv-export` at 71fa09f.
+
+## Scope of this run
+- Run: `sh verify.sh`, plus a manual check of each acceptance criterion against the real command.
+- Not run: `pr-review` and the testing toolkit. Neither is installed on this machine.
+
+## Results
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | `list --csv` prints the header and four rows | Pass | Output is `id,customer,amount,status` plus INV-001 to INV-004. |
+| AC2 | `list --status open --csv` prints the header and three open invoices | Pass | Header plus INV-001, INV-003 and INV-004. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` appear | **Fail** | INV-002 matches. INV-004 prints as `INV-004,Initech &quot;West&quot;,4500.00,open`. `grep -xF` for the expected row finds nothing. |
+| AC4 | `list` prints the same bytes as before | Pass | `cmp` against `bin/invoices` at the base commit 7f48244, run on the same data: identical for `list` and for `list --status open`. |
+| AC5 | A 2,000-invoice export finishes in under 5 seconds | Pass | A generated 2,000-invoice file (with commas and quotes in names) exported in 0.012 s, 2,001 lines. |
+
+Non-functional: no new dependency. `bin/invoices` uses only POSIX shell and awk.
+
+## Cause of the AC3 failure
+In `bin/invoices`, the csv branch has `if ($i ~ /,/) $i = &quot;\&quot;&quot; $i &quot;\&quot;&quot;`. It checks only for a comma. It never checks for a double quote, and it never doubles inner quotes. A name like `Initech &quot;West&quot;` therefore goes out unquoted, and a spreadsheet will misread that row. A name with both a comma and a quote would be wrapped but its inner quotes would stay single. I did not change the code. Fixing it belongs to Build.
+
+## Test gaps
+`verify.sh` reports `6 passed, 0 failed`, but that result hides the AC3 failure.
+- `plan.md` maps AC3 to a &quot;a customer with a double quote is quoted&quot; test. That test doesn&apos;t exist in `tests/test_csv.sh`, so nothing catches the bug.
+- `plan.md` maps AC5 to a &quot;2,000 invoices export in under 5 seconds&quot; test. That test doesn&apos;t exist either. I checked AC5 by hand only.
+- The `tests/test_list.sh` checks count lines, not bytes, so AC4 isn&apos;t proven by the suite. I compared bytes against the base commit by hand.
+
+## Departures from the spec and plan
+- No `lib/csv.awk`. Quoting is inline in `bin/invoices`. The plan records this as a departure that Lee agreed to on 2026-11-06, so I did not flag it.
+- One PR instead of the RFC&apos;s two. This is also recorded in the plan.
+
+## What to do next
+1. Build: make the quoting wrap a field that contains a comma or a double quote, and double each inner quote.
+2. Add the two missing tests (double quote, 2,000 invoices) and a byte-for-byte AC4 check.
+3. Re-run this stage. Lee shouldn&apos;t approve Test until AC3 passes.
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:91.7%"></span></span>
+<span class="num">91.7%</span>
+<span class="muted num">7 turns · $0.15 · 20:49:10 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">adds-a-phase-for-the-failure</span>  </summary>
+<div class="grader-body">
+<p class="explanation">pattern not found in file docs/sdlc/csv-export/plan.md</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">catches-the-quote-bug</span> <span class="muted">×4</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Branch: `sam/csv-export`
+Verdict: **Not ready to approve.** AC3 fails: a field with a double quote is not quoted or doubled.
+
+## Result per acceptance criterion
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | Header plus four rows | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. Covered by an automated test. |
+| AC2 | `--status open --csv` prints the header and three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. Covered by an automated test. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` | **Fail** | The INV-002 row matches. INV-004 prints as `INV-004,Initech &quot;West&quot;,4500.00,open`. See the finding below. |
+| AC4 | `bin/invoices list` output is byte-identical to before | Pass | I ran `bin/invoices` from `2a60f9c^` (before the build) and the current one. `cmp` found no difference for `list` and for `list --status open`. |
+| AC5 | 2,000 invoices export in under 5 seconds | Pass, with no test | A generated 2,000-invoice file exported in 0.012s with `INVOICES_FILE` set. No test in the repo covers this. |
+
+## Finding: double quotes are not handled (R3, AC3)
+In `bin/invoices`, the CSV branch quotes a field only when it contains a comma (`$i ~ /,/`). It never checks for a double quote and never doubles inner quotes.
+
+- **Customer `Initech &quot;West&quot;`:** it has a quote but no comma, so it prints as `Initech &quot;West&quot;`. A spreadsheet will read that field wrongly.
+- **A customer with both, like `Cust, 1 &quot;x&quot;`:** it gets wrapped, but the inner quote is left single. It prints as `&quot;Cust, 1 &quot;x&quot;&quot;`, which is malformed CSV. I saw this in the 2,000-row file.
+
+The fix is small. Wrap when the field matches `/[,&quot;]/`, and run `gsub(/&quot;/, &quot;\&quot;\&quot;&quot;)` on the field before wrapping.
+
+## Test coverage gaps
+`sh verify.sh` ends with `6 passed, 0 failed`, but it does not cover the failing case.
+
+- `plan.md` lists a test, &quot;a customer with a double quote is quoted&quot;, for AC3. It was never written, so verify stays green while AC3 fails.
+- `plan.md` lists a test, &quot;2,000 invoices export in under 5 seconds&quot;, for AC5. It was never written either.
+
+## Departures from the plan
+- The quoting is inline in `bin/invoices`, and `lib/csv.awk` does not exist. `plan.md` already records this and Lee agreed on 2026-11-06.
+- Both phases went into one PR instead of two. `plan.md` records this too.
+
+## What I did not run
+- `pr-review` and the testing toolkit are not installed on this machine, so I skipped them. Nothing here covers what they would have checked.
+
+## Commands run
+- `sh verify.sh`: `6 passed, 0 failed`
+- `bin/invoices list --csv` and `bin/invoices list --status open --csv`: output compared with AC1 to AC3 by eye and with `grep -xF`
+- `cmp` of old and new `list` output, with and without `--status open`
+- A 2,000-invoice file built with awk, then `time INVOICES_FILE=&lt;file&gt; bin/invoices list --csv`
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">evidence-per-criterion</span> <span class="muted">×2</span> </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence"># CSV export for the invoice list — verification
+
+Branch: `sam/csv-export`
+Verdict: **Not ready to approve.** AC3 fails: a field with a double quote is not quoted or doubled.
+
+## Result per acceptance criterion
+| Id | Criterion | Result | Evidence |
+|---|---|---|---|
+| AC1 | Header plus four rows | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. Covered by an automated test. |
+| AC2 | `--status open --csv` prints the header and three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. Covered by an automated test. |
+| AC3 | Rows `INV-002,&quot;Acme, Inc.&quot;,310.50,paid` and `INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open` | **Fail** | The INV-002 row matches. INV-004 prints as `INV-004,Initech &quot;West&quot;,4500.00,open`. See the finding below. |
+| AC4 | `bin/invoices list` output is byte-identical to before | Pass | I ran `bin/invoices` from `2a60f9c^` (before the build) and the current one. `cmp` found no difference for `list` and for `list --status open`. |
+| AC5 | 2,000 invoices export in under 5 seconds | Pass, with no test | A generated 2,000-invoice file exported in 0.012s with `INVOICES_FILE` set. No test in the repo covers this. |
+
+## Finding: double quotes are not handled (R3, AC3)
+In `bin/invoices`, the CSV branch quotes a field only when it contains a comma (`$i ~ /,/`). It never checks for a double quote and never doubles inner quotes.
+
+- **Customer `Initech &quot;West&quot;`:** it has a quote but no comma, so it prints as `Initech &quot;West&quot;`. A spreadsheet will read that field wrongly.
+- **A customer with both, like `Cust, 1 &quot;x&quot;`:** it gets wrapped, but the inner quote is left single. It prints as `&quot;Cust, 1 &quot;x&quot;&quot;`, which is malformed CSV. I saw this in the 2,000-row file.
+
+The fix is small. Wrap when the field matches `/[,&quot;]/`, and run `gsub(/&quot;/, &quot;\&quot;\&quot;&quot;)` on the field before wrapping.
+
+## Test coverage gaps
+`sh verify.sh` ends with `6 passed, 0 failed`, but it does not cover the failing case.
+
+- `plan.md` lists a test, &quot;a customer with a double quote is quoted&quot;, for AC3. It was never written, so verify stays green while AC3 fails.
+- `plan.md` lists a test, &quot;2,000 invoices export in under 5 seconds&quot;, for AC5. It was never written either.
+
+## Departures from the plan
+- The quoting is inline in `bin/invoices`, and `lib/csv.awk` does not exist. `plan.md` already records this and Lee agreed on 2026-11-06.
+- Both phases went into one PR instead of two. `plan.md` records this too.
+
+## What I did not run
+- `pr-review` and the testing toolkit are not installed on this machine, so I skipped them. Nothing here covers what they would have checked.
+
+## Commands run
+- `sh verify.sh`: `6 passed, 0 failed`
+- `bin/invoices list --csv` and `bin/invoices list --status open --csv`: output compared with AC1 to AC3 by eye and with `grep -xF`
+- `cmp` of old and new `list` output, with and without `--status open`
+- A 2,000-invoice file built with awk, then `time INVOICES_FILE=&lt;file&gt; bin/invoices list --csv`
+</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">leaves-the-fix-to-build</span>  </summary>
+<div class="grader-body">
+<p class="explanation">matched if \(\$i ~ /,/\)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">not-self-approved</span> <span class="muted">×3</span> </summary>
+<div class="grader-body">
+<p class="explanation">found 5 matches (expected 5)</p>
+
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">verify-written</span>  </summary>
+<div class="grader-body">
+<p class="explanation">docs/sdlc/csv-export/verify.md exists as expected</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>The csv-export build is finished. Run the Test stage: check the feature against its spec and write up the evidence for Lee. pr-review and the testing toolkit aren't installed on this machine, so leave those runs out.</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">adds-a-phase-for-the-failure</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/csv-export/plan.md&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;\\|\\s*3\\s*\\|&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">catches-the-quote-bug</span><span class="badge">llm</span><span class="muted">weight ×4</span></div>
+<div class="md"><p>The file is a verification report for a CSV export. Acceptance criterion AC3 requires the row <code>INV-004,&quot;Initech &quot;&quot;West&quot;&quot;&quot;,4500.00,open</code>. The code under test actually prints <code>INV-004,Initech &quot;West&quot;,4500.00,open</code>, so AC3 is not met.</p>
+<p>PASS only if the report says AC3 fails, or is only partly met, because a field with a double quote is not quoted or escaped.
+FAIL if the report marks AC3 as passing, or says every criterion passes.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">evidence-per-criterion</span><span class="badge">llm</span><span class="muted">weight ×2</span></div>
+<div class="md"><p>The file is a verification report for a feature with five acceptance criteria, AC1 to AC5. AC5 is a speed target of 2,000 invoices in under 5 seconds.</p>
+<p>PASS only if all of these hold:</p>
+<ul>
+<li>Each of AC1 to AC5 has its own result.</li>
+<li>Each result comes with evidence a reader could check, such as a test name, a command with its output, or a measured time.</li>
+<li>AC5 has a measured time, or is listed as untested. It is not marked as passing without a number.</li>
+</ul>
+<p>FAIL otherwise.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">leaves-the-fix-to-build</span><span class="badge">regex</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;bin/invoices&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;if \\(\\$i ~ /,/\\)&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;contains&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">not-self-approved</span><span class="badge">regex</span><span class="muted">weight ×3</span></div>
+<div class="config"><div class="kv"><span>target</span><code>{&quot;source&quot;:&quot;file&quot;,&quot;path&quot;:&quot;docs/sdlc/csv-export/sdlc.yaml&quot;}</code></div><div class="kv"><span>pattern</span><code>&quot;status:\\s*\&quot;?approved&quot;</code></div><div class="kv"><span>flags</span><code>&quot;&quot;</code></div><div class="kv"><span>match</span><code>&quot;count:5&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?(?:sdlc|test)\&quot;&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">verifier-dispatched</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Agent&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;verifier&quot;</code></div><div class="kv"><span>arm</span><code>&quot;with-only&quot;</code></div></div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">verify-written</span><span class="badge">file_exists</span></div>
+<div class="config"><div class="kv"><span>path</span><code>&quot;docs/sdlc/csv-export/verify.md&quot;</code></div><div class="kv"><span>exists</span><code>true</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1669 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.322",
+  "startedAt": "2026-11-12T20:41:21.619Z",
+  "durationSeconds": 504,
+  "costUsd": 2.3427206,
+  "partial": false,
+  "suite": {
+    "root": "~/Documents/code/sdlc-toolkit/plugins/sdlc",
+    "ablation": "with-without",
+    "modelOverride": "claude-sonnet-5-5",
+    "judgeModel": "claude-sonnet-5-5",
+    "tagFilters": [
+      "build",
+      "test"
+    ],
+    "threshold": 1,
+    "concurrency": 1,
+    "plugins": [
+      {
+        "name": "sdlc",
+        "version": "0.7.0",
+        "path": "~/Documents/code/sdlc-toolkit/plugins/sdlc"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "next-phase-todos",
+      "dir": "evals/build/next-phase-todos",
+      "source": "mixed",
+      "promptMarkdown": "Start the next phase of the bulk-export build. Get plan.md ready for it, then stop before you write any test or code.",
+      "runsPerCase": 3,
+      "timeoutSeconds": 720,
+      "maxTurns": 30,
+      "graders": [
+        {
+          "name": "no-todos-for-phase-3",
+          "type": "regex",
+          "weight": 2,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/bulk-export/plan.md"
+            },
+            "pattern": "## Todos[\\s\\S]*### Phase 3",
+            "flags": "",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "phase-2-in-progress",
+          "type": "regex",
+          "weight": 2,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/bulk-export/plan.md"
+            },
+            "pattern": "(^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "phase-3-still-pending",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/bulk-export/plan.md"
+            },
+            "pattern": "(^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?(?:sdlc|build)\""
+          }
+        },
+        {
+          "name": "todos-for-phase-2",
+          "type": "regex",
+          "weight": 2,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/bulk-export/plan.md"
+            },
+            "pattern": "## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+            "flags": "",
+            "match": "contains"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.0982493,
+            "judgeCostUsd": 0,
+            "durationSeconds": 13,
+            "startedAt": "2026-11-12T20:41:21.672Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-QVprlQ/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 2x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.0937767,
+            "judgeCostUsd": 0,
+            "durationSeconds": 13,
+            "startedAt": "2026-11-12T20:41:34.698Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-jsH8Xo/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 8,
+            "costUsd": 0.0861408,
+            "judgeCostUsd": 0,
+            "durationSeconds": 10,
+            "startedAt": "2026-11-12T20:41:47.309Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-P6keST/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 7,
+            "costUsd": 0.061578,
+            "judgeCostUsd": 0,
+            "durationSeconds": 10,
+            "startedAt": "2026-11-12T20:41:57.344Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-lMqppj/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.0747135,
+            "judgeCostUsd": 0,
+            "durationSeconds": 15,
+            "startedAt": "2026-11-12T20:42:07.019Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-cthyoF/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 7,
+            "costUsd": 0.0620623,
+            "judgeCostUsd": 0,
+            "durationSeconds": 10,
+            "startedAt": "2026-11-12T20:42:21.542Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-m0oip2/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "no-todos-for-phase-3",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-in-progress",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched (^|\\n)\\|\\s*2\\s*\\|[^\\n]*\\|\\s*in_progress\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-3-still-pending",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (^|\\n)\\|\\s*3\\s*\\|[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-for-phase-2",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched ## Todos[\\s\\S]*### Phase 2[^\\n]*\\n[\\s\\S]*?- \\[ \\]",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    },
+    {
+      "name": "build-one-phase",
+      "dir": "evals/stages/build-one-phase",
+      "source": "mixed",
+      "promptMarkdown": "Build phase 1 of csv-export, and stop when that phase is finished. pr-review, ponytail and the testing toolkit aren't installed on this machine, so carry on without them.",
+      "runsPerCase": 3,
+      "timeoutSeconds": 1200,
+      "maxTurns": 80,
+      "graders": [
+        {
+          "name": "csv-option-added",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "bin/invoices"
+            },
+            "pattern": "--csv",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "no-phase-2-code",
+          "type": "file_exists",
+          "weight": 1,
+          "config": {
+            "path": "lib/**",
+            "exists": false
+          }
+        },
+        {
+          "name": "nothing-on-main",
+          "type": "regex",
+          "weight": 2,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": ".git/logs/refs/heads/main"
+            },
+            "pattern": "\\t(commit|commit \\(amend\\)|merge[^:]*): ",
+            "flags": "",
+            "match": "not_contains"
+          }
+        },
+        {
+          "name": "phase-2-still-pending",
+          "type": "regex",
+          "weight": 2,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/plan.md"
+            },
+            "pattern": "\\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "red-before-green",
+          "type": "regex",
+          "weight": 3,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": ".test-log"
+            },
+            "pattern": "FAIL - [^\\n]*csv[^\\n]*\\n[\\s\\S]*ok - [^\\n]*csv",
+            "flags": "i",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?(?:sdlc|build)\""
+          }
+        },
+        {
+          "name": "test-and-code-commits",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": ".git/logs/HEAD"
+            },
+            "pattern": "(?:\\tcommit: [^\\n]*\\n[\\s\\S]*?){7}",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "todos-checked-off",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/plan.md"
+            },
+            "pattern": "- \\[x\\]",
+            "flags": "i",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "verify-green-with-new-tests",
+          "type": "regex",
+          "weight": 3,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": ".verify-last"
+            },
+            "pattern": "^(?:[4-9]|\\d\\d+) passed, 0 failed",
+            "flags": "",
+            "match": "contains"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.7857142857142857,
+            "passed": false,
+            "turns": 14,
+            "costUsd": 0.16556940000000003,
+            "judgeCostUsd": 0,
+            "durationSeconds": 23,
+            "startedAt": "2026-11-12T20:42:31.094Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-43nQv0/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": false,
+                "weight": 3,
+                "explanation": "pattern not found in file .test-log",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (?:\\tcommit: [^\\n]*\\n[\\s\\S]*?){7}",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 11,
+            "costUsd": 0.1336996,
+            "judgeCostUsd": 0,
+            "durationSeconds": 23,
+            "startedAt": "2026-11-12T20:42:53.795Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-QJeKdX/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched FAIL - [^\\n]*csv[^\\n]*\\n[\\s\\S]*ok - [^\\n]*csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (?:\\tcommit: [^\\n]*\\n[\\s\\S]*?){7}",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 11,
+            "costUsd": 0.12128789999999998,
+            "judgeCostUsd": 0,
+            "durationSeconds": 20,
+            "startedAt": "2026-11-12T20:43:16.613Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-gQEaFi/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched FAIL - [^\\n]*csv[^\\n]*\\n[\\s\\S]*ok - [^\\n]*csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched (?:\\tcommit: [^\\n]*\\n[\\s\\S]*?){7}",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.9285714285714286,
+            "passed": false,
+            "turns": 8,
+            "costUsd": 0.10777420000000001,
+            "judgeCostUsd": 0,
+            "durationSeconds": 21,
+            "startedAt": "2026-11-12T20:43:36.299Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-ltEOzF/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched FAIL - [^\\n]*csv[^\\n]*\\n[\\s\\S]*ok - [^\\n]*csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file .git/logs/HEAD",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.7142857142857143,
+            "passed": false,
+            "turns": 10,
+            "costUsd": 0.1090431,
+            "judgeCostUsd": 0,
+            "durationSeconds": 22,
+            "startedAt": "2026-11-12T20:43:57.491Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-Y4r9N2/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": false,
+                "weight": 3,
+                "explanation": "pattern not found in file .test-log",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file .git/logs/HEAD",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.7142857142857143,
+            "passed": false,
+            "turns": 8,
+            "costUsd": 0.10463,
+            "judgeCostUsd": 0,
+            "durationSeconds": 20,
+            "startedAt": "2026-11-12T20:44:19.135Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-YAcqHj/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "csv-option-added",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched --csv",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "no-phase-2-code",
+                "passed": true,
+                "weight": 1,
+                "explanation": "lib/** absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "nothing-on-main",
+                "passed": true,
+                "weight": 2,
+                "explanation": "pattern absent as expected",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "phase-2-still-pending",
+                "passed": true,
+                "weight": 2,
+                "explanation": "matched \\|\\s*2\\s*\\|\\s*Quoting[^\\n]*\\|\\s*pending\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "red-before-green",
+                "passed": false,
+                "weight": 3,
+                "explanation": "grader threw: case \"build-one-phase\" grader focus file \".test-log\": path \".test-log\" does not exist",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "test-and-code-commits",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file .git/logs/HEAD",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "todos-checked-off",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched - \\[x\\]",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-green-with-new-tests",
+                "passed": true,
+                "weight": 3,
+                "explanation": "matched ^(?:[4-9]|\\d\\d+) passed, 0 failed",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.9285714285714285,
+        "passRate": 0.6666666666666666,
+        "scoreWithout": 0.7857142857142857,
+        "passRateWithout": 0,
+        "delta": 0.1428571428571428
+      }
+    },
+    {
+      "name": "test-catches-bug",
+      "dir": "evals/stages/test-catches-bug",
+      "source": "mixed",
+      "promptMarkdown": "The csv-export build is finished. Run the Test stage: check the feature against its spec and write up the evidence for Lee. pr-review and the testing toolkit aren't installed on this machine, so leave those runs out.",
+      "runsPerCase": 3,
+      "timeoutSeconds": 1200,
+      "maxTurns": 80,
+      "graders": [
+        {
+          "name": "adds-a-phase-for-the-failure",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/plan.md"
+            },
+            "pattern": "\\|\\s*3\\s*\\|",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "catches-the-quote-bug",
+          "type": "llm",
+          "weight": 4,
+          "graderMarkdown": "The file is a verification report for a CSV export. Acceptance criterion AC3 requires the row `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The code under test actually prints `INV-004,Initech \"West\",4500.00,open`, so AC3 is not met.\n\nPASS only if the report says AC3 fails, or is only partly met, because a field with a double quote is not quoted or escaped.\nFAIL if the report marks AC3 as passing, or says every criterion passes.",
+          "config": {
+            "criteria": "The file is a verification report for a CSV export. Acceptance criterion AC3 requires the row `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The code under test actually prints `INV-004,Initech \"West\",4500.00,open`, so AC3 is not met.\n\nPASS only if the report says AC3 fails, or is only partly met, because a field with a double quote is not quoted or escaped.\nFAIL if the report marks AC3 as passing, or says every criterion passes.",
+            "focus": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/verify.md"
+            }
+          }
+        },
+        {
+          "name": "evidence-per-criterion",
+          "type": "llm",
+          "weight": 2,
+          "graderMarkdown": "The file is a verification report for a feature with five acceptance criteria, AC1 to AC5. AC5 is a speed target of 2,000 invoices in under 5 seconds.\n\nPASS only if all of these hold:\n- Each of AC1 to AC5 has its own result.\n- Each result comes with evidence a reader could check, such as a test name, a command with its output, or a measured time.\n- AC5 has a measured time, or is listed as untested. It is not marked as passing without a number.\n\nFAIL otherwise.",
+          "config": {
+            "criteria": "The file is a verification report for a feature with five acceptance criteria, AC1 to AC5. AC5 is a speed target of 2,000 invoices in under 5 seconds.\n\nPASS only if all of these hold:\n- Each of AC1 to AC5 has its own result.\n- Each result comes with evidence a reader could check, such as a test name, a command with its output, or a measured time.\n- AC5 has a measured time, or is listed as untested. It is not marked as passing without a number.\n\nFAIL otherwise.",
+            "focus": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/verify.md"
+            }
+          }
+        },
+        {
+          "name": "leaves-the-fix-to-build",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "bin/invoices"
+            },
+            "pattern": "if \\(\\$i ~ /,/\\)",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "not-self-approved",
+          "type": "regex",
+          "weight": 3,
+          "config": {
+            "target": {
+              "source": "file",
+              "path": "docs/sdlc/csv-export/sdlc.yaml"
+            },
+            "pattern": "status:\\s*\"?approved",
+            "flags": "",
+            "match": "count:5"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?(?:sdlc|test)\""
+          }
+        },
+        {
+          "name": "verifier-dispatched",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Agent",
+            "input_match": "verifier",
+            "arm": "with-only"
+          }
+        },
+        {
+          "name": "verify-written",
+          "type": "file_exists",
+          "weight": 1,
+          "config": {
+            "path": "docs/sdlc/csv-export/verify.md",
+            "exists": true
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 8,
+            "costUsd": 0.1422528,
+            "judgeCostUsd": 0.012606000000000001,
+            "durationSeconds": 29,
+            "startedAt": "2026-11-12T20:44:39.550Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-NS8HoM/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched \\|\\s*3\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: FAILED, sent back to Build. Not approved.\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes. `bin/invoices list --csv` printed the header and four rows. | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv ...\" passes. The output was the header and INV-001, INV-003, INV-004. | pass |\n| AC3 | Output was `INV-004,Initech \"West\",4500.00,open`. The spec wants `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. No test covers it. | **fail** |\n| AC4 | `tests/test_list.sh` passes, but it checks line counts and not bytes. I did not compare against the pre-change output. | not proven |\n| AC5 | No test exists. A manual 2,000-invoice run took 0.013 s. That file's quoted fields were malformed, as in AC3. | timing ok, untested |\n\n## Tests\n- Report: none. The testing toolkit isn't installed, so that step was skipped.\n- Tests added in this stage: none\n\n## Verifier report\nNot run. I exercised the criteria directly instead. Run the verifier after the fix.\n\n## pr-review\nNot run. pr-review isn't installed on this machine.\n\n## Gaps\n- `plan.md` lists tests for the AC3 double-quote case and AC5. Neither is in `tests/test_csv.sh`, and Build marked phase 2 done.\n- `lib/csv.awk` was dropped, with Lee's agreement, and `plan.md` records that. The quoting bug lives in the inline awk.\n- No UI, no agent evals in this diff.\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: FAILED, sent back to Build. Not approved.\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes. `bin/invoices list --csv` printed the header and four rows. | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv ...\" passes. The output was the header and INV-001, INV-003, INV-004. | pass |\n| AC3 | Output was `INV-004,Initech \"West\",4500.00,open`. The spec wants `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. No test covers it. | **fail** |\n| AC4 | `tests/test_list.sh` passes, but it checks line counts and not bytes. I did not compare against the pre-change output. | not proven |\n| AC5 | No test exists. A manual 2,000-invoice run took 0.013 s. That file's quoted fields were malformed, as in AC3. | timing ok, untested |\n\n## Tests\n- Report: none. The testing toolkit isn't installed, so that step was skipped.\n- Tests added in this stage: none\n\n## Verifier report\nNot run. I exercised the criteria directly instead. Run the verifier after the fix.\n\n## pr-review\nNot run. pr-review isn't installed on this machine.\n\n## Gaps\n- `plan.md` lists tests for the AC3 double-quote case and AC5. Neither is in `tests/test_csv.sh`, and Build marked phase 2 done.\n- `lib/csv.awk` was dropped, with Lee's agreement, and `plan.md` records that. The quoting bug lives in the inline awk.\n- No UI, no agent evals in this diff.\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verifier-dispatched",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Agent called 0x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 6,
+            "costUsd": 0.3889224,
+            "judgeCostUsd": 0.017897999999999997,
+            "durationSeconds": 136,
+            "startedAt": "2026-11-12T20:45:08.412Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-Ug0Nh0/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched \\|\\s*3\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: **FAILED — AC3 fails; sent back to Build (plan.md Phase 3).**\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\nThe suite is green only because the tests for AC3's double-quote row and AC5 were never written (see Gaps).\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes; verifier saw header plus four rows | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv keeps the header and the three open invoices\" passes; verifier saw header plus three open rows | pass |\n| AC3 | No test for the quote row. `bin/invoices list --csv` printed `INV-004,Initech \"West\",4500.00,open`; spec requires `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The `INV-002` row matches. A field with a comma and a quote (`Foo, \"Bar\" Inc.`) came out as `\"Foo, \"Bar\" Inc.\"`, which Python's csv module parses as a corrupted field | **FAIL** |\n| AC4 | `tests/test_list.sh` (3 checks) passes; verifier inspected the non-CSV branch. No byte-for-byte diff against the pre-change output (git unusable in this sandbox) | pass (inspection only) |\n| AC5 | No test. Manual run with a 2,000-invoice file in `$TMPDIR`: `bin/invoices list --csv` took 0.013 s total, 2001 output lines | pass (manual only) |\n\n## Tests\n- Report: none. The testing toolkit isn't installed, so this step was skipped.\n- Done when: not applicable.\n- Tests added in this stage: none. Phase 3 adds them.\n\n## Verifier report\nSummary: AC1, AC2 pass. AC3 fails: `bin/invoices` quotes a field only if it contains a comma (`if ($i ~ /,/)`), never doubles embedded quotes and never quotes a quote-only field. AC4 passes by inspection only because git is unusable in the sandbox. AC5 passes manually at 0.013 s. `plan.md` lists the tests \"a customer with a double quote is quoted\" and \"2,000 invoices export in under 5 seconds\" in `tests/test_csv.sh`, but the file holds only three checks and neither exists. The quoting is inline in `bin/invoices` (lines 18–24), matching the departure recorded in plan.md; `lib/csv.awk` doesn't exist.\n\nFull report is in the Test-stage session transcript; the AC table above carries its literal outputs.\n\n## pr-review\n- Skipped: pr-review isn't installed on this machine.\n\n## Gaps\n- AC3 fails (above).\n- Missing tests: \"a customer with a double quote is quoted\" (AC3) and \"2,000 invoices export in under 5 seconds\" (AC5), both listed in plan.md.\n- AC4 has no byte-for-byte comparison with the pre-change output.\n- No testing-toolkit or pr-review run; no UI to check.\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: **FAILED — AC3 fails; sent back to Build (plan.md Phase 3).**\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\nThe suite is green only because the tests for AC3's double-quote row and AC5 were never written (see Gaps).\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes; verifier saw header plus four rows | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv keeps the header and the three open invoices\" passes; verifier saw header plus three open rows | pass |\n| AC3 | No test for the quote row. `bin/invoices list --csv` printed `INV-004,Initech \"West\",4500.00,open`; spec requires `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The `INV-002` row matches. A field with a comma and a quote (`Foo, \"Bar\" Inc.`) came out as `\"Foo, \"Bar\" Inc.\"`, which Python's csv module parses as a corrupted field | **FAIL** |\n| AC4 | `tests/test_list.sh` (3 checks) passes; verifier inspected the non-CSV branch. No byte-for-byte diff against the pre-change output (git unusable in this sandbox) | pass (inspection only) |\n| AC5 | No test. Manual run with a 2,000-invoice file in `$TMPDIR`: `bin/invoices list --csv` took 0.013 s total, 2001 output lines | pass (manual only) |\n\n## Tests\n- Report: none. The testing toolkit isn't installed, so this step was skipped.\n- Done when: not applicable.\n- Tests added in this stage: none. Phase 3 adds them.\n\n## Verifier report\nSummary: AC1, AC2 pass. AC3 fails: `bin/invoices` quotes a field only if it contains a comma (`if ($i ~ /,/)`), never doubles embedded quotes and never quotes a quote-only field. AC4 passes by inspection only because git is unusable in the sandbox. AC5 passes manually at 0.013 s. `plan.md` lists the tests \"a customer with a double quote is quoted\" and \"2,000 invoices export in under 5 seconds\" in `tests/test_csv.sh`, but the file holds only three checks and neither exists. The quoting is inline in `bin/invoices` (lines 18–24), matching the departure recorded in plan.md; `lib/csv.awk` doesn't exist.\n\nFull report is in the Test-stage session transcript; the AC table above carries its literal outputs.\n\n## pr-review\n- Skipped: pr-review isn't installed on this machine.\n\n## Gaps\n- AC3 fails (above).\n- Missing tests: \"a customer with a double quote is quoted\" (AC3) and \"2,000 invoices export in under 5 seconds\" (AC5), both listed in plan.md.\n- AC4 has no byte-for-byte comparison with the pre-change output.\n- No testing-toolkit or pr-review run; no UI to check.\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verifier-dispatched",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Agent called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.15573889999999999,
+            "judgeCostUsd": 0.014969999999999987,
+            "durationSeconds": 34,
+            "startedAt": "2026-11-12T20:47:24.760Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-2JiAW4/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched \\|\\s*3\\s*\\|",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: **failed. AC3 fails and AC3/AC5 have no test. Sent back to Build (plan phase 3).**\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes. Direct run printed the header and four rows. | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv ...\" passes. Direct run printed the header and INV-001, INV-003, INV-004. | pass |\n| AC3 | Direct run printed `INV-004,Initech \"West\",4500.00,open`. Expected `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The awk only quotes fields containing a comma. | **FAIL** |\n| AC4 | `old/bin/invoices list` (from `main`) and the new `bin/invoices list` compared with `cmp`: identical bytes. `tests/test_list.sh` passes. | pass |\n| AC5 | No test exists. Manual run, 2,000 rows: 0.012 s, 2001 lines. The input had no quote characters. | pass (manual only) |\n\nAC3 detail: `bin/invoices` line `if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"` ignores double quotes. The \"double quote\" test the plan lists for AC3 was never written, so the suite stayed green.\n\n## Tests\n- Testing toolkit: not run. Not installed on this machine, skipped at the user's instruction.\n- Tests missing from `tests/test_csv.sh`: \"a customer with a double quote is quoted\" (AC3) and \"2,000 invoices export in under 5 seconds\" (AC5). The plan lists both.\n\n## Verifier report\nNot run. I checked each criterion directly in this session instead, so this is not a fresh-context check.\n\n## pr-review\nNot run. Not installed on this machine, skipped at the user's instruction. No Net line.\n\n## Gaps\n- AC3 fails (above).\n- AC5 is only checked by hand, and the input had no quotes or commas.\n- No UI, no agent evals (diff doesn't touch CLAUDE.md, .claude or skills).\n- Verifier, testing toolkit and pr-review are not run, so `tools` in sdlc.yaml can't be filled for the Test stage.\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nStatus: **failed. AC3 fails and AC3/AC5 have no test. Sent back to Build (plan phase 3).**\n\n## Verify command\n`sh verify.sh`\n\n```\nok - list --csv prints the header and four rows\nok - --status open --csv keeps the header and the three open invoices\nok - a customer with a comma is quoted\nok - list prints the header and all four invoices\nok - --status open keeps the header and the three open invoices\nok - an unknown option exits 2\n6 passed, 0 failed\n```\n\n## Acceptance criteria\n| Id | Evidence | Result |\n|---|---|---|\n| AC1 | `tests/test_csv.sh` \"list --csv prints the header and four rows\" passes. Direct run printed the header and four rows. | pass |\n| AC2 | `tests/test_csv.sh` \"--status open --csv ...\" passes. Direct run printed the header and INV-001, INV-003, INV-004. | pass |\n| AC3 | Direct run printed `INV-004,Initech \"West\",4500.00,open`. Expected `INV-004,\"Initech \"\"West\"\"\",4500.00,open`. The awk only quotes fields containing a comma. | **FAIL** |\n| AC4 | `old/bin/invoices list` (from `main`) and the new `bin/invoices list` compared with `cmp`: identical bytes. `tests/test_list.sh` passes. | pass |\n| AC5 | No test exists. Manual run, 2,000 rows: 0.012 s, 2001 lines. The input had no quote characters. | pass (manual only) |\n\nAC3 detail: `bin/invoices` line `if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"` ignores double quotes. The \"double quote\" test the plan lists for AC3 was never written, so the suite stayed green.\n\n## Tests\n- Testing toolkit: not run. Not installed on this machine, skipped at the user's instruction.\n- Tests missing from `tests/test_csv.sh`: \"a customer with a double quote is quoted\" (AC3) and \"2,000 invoices export in under 5 seconds\" (AC5). The plan lists both.\n\n## Verifier report\nNot run. I checked each criterion directly in this session instead, so this is not a fresh-context check.\n\n## pr-review\nNot run. Not installed on this machine, skipped at the user's instruction. No Net line.\n\n## Gaps\n- AC3 fails (above).\n- AC5 is only checked by hand, and the input had no quotes or commas.\n- No UI, no agent evals (diff doesn't touch CLAUDE.md, .claude or skills).\n- Verifier, testing toolkit and pr-review are not run, so `tools` in sdlc.yaml can't be filled for the Test stage.\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verifier-dispatched",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Agent called 0x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0.9166666666666666,
+            "passed": false,
+            "turns": 8,
+            "costUsd": 0.14323819999999998,
+            "judgeCostUsd": 0.019049999999999984,
+            "durationSeconds": 36,
+            "startedAt": "2026-11-12T20:47:58.579Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-38UXWo/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file docs/sdlc/csv-export/plan.md",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — test evidence\n\nVerdict: **not ready for approval.** AC3 fails, and no automated test catches it.\n\nTested on branch `sam/csv-export` at e37b399. Each criterion in `spec.md` was run by hand against `bin/invoices`, in addition to `sh verify.sh`.\n\nNot run: pr-review and the testing toolkit, which aren't installed on this machine. Nothing in this document comes from either.\n\n## Results\n\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | Header plus four rows for the sample data | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. |\n| AC2 | `--status open --csv` prints the header and the three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` | **Fail** | The INV-002 row matches. INV-004 is printed as `INV-004,Initech \"West\",4500.00,open`. `grep -xF` for the spec's row found nothing. |\n| AC4 | `bin/invoices list` output unchanged | Pass | I extracted `bin/invoices` from `a83d6d1^`, the commit before Build, and ran it against the same data. Output was byte-identical (`cmp`) for `list`, `list --status open` and `list --status paid`. |\n| AC5 | 2,000 invoices export in under 5 seconds | Pass, but untested in the suite | I built a 2,000-invoice file and set `INVOICES_FILE` to it. `list --csv` printed 2,001 lines in 0.014 s. |\n\n## The AC3 failure\n\n`bin/invoices` only quotes a field that contains a comma:\n\n```\nfor (i = 1; i <= NF; i++) if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"\n```\n\nR3 also requires quoting a field that contains a double quote, and doubling each inner quote. The code does neither. A spreadsheet reads `Initech \"West\"` unquoted as a malformed row, which is the kind of mistake Finance is trying to stop making.\n\nA field with both a comma and a quote has the same gap. Its embedded quotes aren't doubled either.\n\n## Test suite gaps\n\n`sh verify.sh` reports `6 passed, 0 failed`. That result is accurate but doesn't cover the failure above.\n\n- `plan.md` maps AC3 to two tests: \"a customer with a comma is quoted\" and \"a customer with a double quote is quoted\". Only the first exists in `tests/test_csv.sh`. That is why the suite is green with AC3 broken.\n- `plan.md` maps AC5 to a test, \"2,000 invoices export in under 5 seconds\". `tests/test_csv.sh` doesn't contain it. The Build stage marked Phase 2 done without it.\n- The AC4 checks in `tests/test_list.sh` count lines. They don't compare bytes, so they don't prove R4. The byte comparison above does.\n\n## Needed before Test can be approved\n\n1. Fix the quoting in `bin/invoices` so a field with a double quote is wrapped and its inner quotes are doubled.\n2. Add the two missing tests from the plan, the double-quote test and the 2,000-invoice timing test. Watch the double-quote test fail first.\n3. Re-run `sh verify.sh` and re-check AC3 against the spec's exact rows.\n\n## Departures from the plan, for Lee\n\nThe plan records two departures, which Lee has already agreed to: the quoting is inline rather than in `lib/csv.awk`, and both phases went in one PR. Neither affects the result above.\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — test evidence\n\nVerdict: **not ready for approval.** AC3 fails, and no automated test catches it.\n\nTested on branch `sam/csv-export` at e37b399. Each criterion in `spec.md` was run by hand against `bin/invoices`, in addition to `sh verify.sh`.\n\nNot run: pr-review and the testing toolkit, which aren't installed on this machine. Nothing in this document comes from either.\n\n## Results\n\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | Header plus four rows for the sample data | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. |\n| AC2 | `--status open --csv` prints the header and the three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` | **Fail** | The INV-002 row matches. INV-004 is printed as `INV-004,Initech \"West\",4500.00,open`. `grep -xF` for the spec's row found nothing. |\n| AC4 | `bin/invoices list` output unchanged | Pass | I extracted `bin/invoices` from `a83d6d1^`, the commit before Build, and ran it against the same data. Output was byte-identical (`cmp`) for `list`, `list --status open` and `list --status paid`. |\n| AC5 | 2,000 invoices export in under 5 seconds | Pass, but untested in the suite | I built a 2,000-invoice file and set `INVOICES_FILE` to it. `list --csv` printed 2,001 lines in 0.014 s. |\n\n## The AC3 failure\n\n`bin/invoices` only quotes a field that contains a comma:\n\n```\nfor (i = 1; i <= NF; i++) if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"\n```\n\nR3 also requires quoting a field that contains a double quote, and doubling each inner quote. The code does neither. A spreadsheet reads `Initech \"West\"` unquoted as a malformed row, which is the kind of mistake Finance is trying to stop making.\n\nA field with both a comma and a quote has the same gap. Its embedded quotes aren't doubled either.\n\n## Test suite gaps\n\n`sh verify.sh` reports `6 passed, 0 failed`. That result is accurate but doesn't cover the failure above.\n\n- `plan.md` maps AC3 to two tests: \"a customer with a comma is quoted\" and \"a customer with a double quote is quoted\". Only the first exists in `tests/test_csv.sh`. That is why the suite is green with AC3 broken.\n- `plan.md` maps AC5 to a test, \"2,000 invoices export in under 5 seconds\". `tests/test_csv.sh` doesn't contain it. The Build stage marked Phase 2 done without it.\n- The AC4 checks in `tests/test_list.sh` count lines. They don't compare bytes, so they don't prove R4. The byte comparison above does.\n\n## Needed before Test can be approved\n\n1. Fix the quoting in `bin/invoices` so a field with a double quote is wrapped and its inner quotes are doubled.\n2. Add the two missing tests from the plan, the double-quote test and the 2,000-invoice timing test. Watch the double-quote test fail first.\n3. Re-run `sh verify.sh` and re-check AC3 against the spec's exact rows.\n\n## Departures from the plan, for Lee\n\nThe plan records two departures, which Lee has already agreed to: the quoting is inline rather than in `lib/csv.awk`, and both phases went in one PR. Neither affects the result above.\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.9166666666666666,
+            "passed": false,
+            "turns": 7,
+            "costUsd": 0.14694400000000002,
+            "judgeCostUsd": 0.01861800000000001,
+            "durationSeconds": 36,
+            "startedAt": "2026-11-12T20:48:34.420Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-2xcXOF/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file docs/sdlc/csv-export/plan.md",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nVerdict: **not ready to approve.** AC3 fails. R3 (doubling inner double quotes) isn't implemented. The other four criteria pass.\n\nSpec: `spec.md` (approved by Lee, 2026-11-03). Code under test: `sam/csv-export` at 71fa09f.\n\n## Scope of this run\n- Run: `sh verify.sh`, plus a manual check of each acceptance criterion against the real command.\n- Not run: `pr-review` and the testing toolkit. Neither is installed on this machine.\n\n## Results\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | `list --csv` prints the header and four rows | Pass | Output is `id,customer,amount,status` plus INV-001 to INV-004. |\n| AC2 | `list --status open --csv` prints the header and three open invoices | Pass | Header plus INV-001, INV-003 and INV-004. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` appear | **Fail** | INV-002 matches. INV-004 prints as `INV-004,Initech \"West\",4500.00,open`. `grep -xF` for the expected row finds nothing. |\n| AC4 | `list` prints the same bytes as before | Pass | `cmp` against `bin/invoices` at the base commit 7f48244, run on the same data: identical for `list` and for `list --status open`. |\n| AC5 | A 2,000-invoice export finishes in under 5 seconds | Pass | A generated 2,000-invoice file (with commas and quotes in names) exported in 0.012 s, 2,001 lines. |\n\nNon-functional: no new dependency. `bin/invoices` uses only POSIX shell and awk.\n\n## Cause of the AC3 failure\nIn `bin/invoices`, the csv branch has `if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"`. It checks only for a comma. It never checks for a double quote, and it never doubles inner quotes. A name like `Initech \"West\"` therefore goes out unquoted, and a spreadsheet will misread that row. A name with both a comma and a quote would be wrapped but its inner quotes would stay single. I did not change the code. Fixing it belongs to Build.\n\n## Test gaps\n`verify.sh` reports `6 passed, 0 failed`, but that result hides the AC3 failure.\n- `plan.md` maps AC3 to a \"a customer with a double quote is quoted\" test. That test doesn't exist in `tests/test_csv.sh`, so nothing catches the bug.\n- `plan.md` maps AC5 to a \"2,000 invoices export in under 5 seconds\" test. That test doesn't exist either. I checked AC5 by hand only.\n- The `tests/test_list.sh` checks count lines, not bytes, so AC4 isn't proven by the suite. I compared bytes against the base commit by hand.\n\n## Departures from the spec and plan\n- No `lib/csv.awk`. Quoting is inline in `bin/invoices`. The plan records this as a departure that Lee agreed to on 2026-11-06, so I did not flag it.\n- One PR instead of the RFC's two. This is also recorded in the plan.\n\n## What to do next\n1. Build: make the quoting wrap a field that contains a comma or a double quote, and double each inner quote.\n2. Add the two missing tests (double quote, 2,000 invoices) and a byte-for-byte AC4 check.\n3. Re-run this stage. Lee shouldn't approve Test until AC3 passes.\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nVerdict: **not ready to approve.** AC3 fails. R3 (doubling inner double quotes) isn't implemented. The other four criteria pass.\n\nSpec: `spec.md` (approved by Lee, 2026-11-03). Code under test: `sam/csv-export` at 71fa09f.\n\n## Scope of this run\n- Run: `sh verify.sh`, plus a manual check of each acceptance criterion against the real command.\n- Not run: `pr-review` and the testing toolkit. Neither is installed on this machine.\n\n## Results\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | `list --csv` prints the header and four rows | Pass | Output is `id,customer,amount,status` plus INV-001 to INV-004. |\n| AC2 | `list --status open --csv` prints the header and three open invoices | Pass | Header plus INV-001, INV-003 and INV-004. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` appear | **Fail** | INV-002 matches. INV-004 prints as `INV-004,Initech \"West\",4500.00,open`. `grep -xF` for the expected row finds nothing. |\n| AC4 | `list` prints the same bytes as before | Pass | `cmp` against `bin/invoices` at the base commit 7f48244, run on the same data: identical for `list` and for `list --status open`. |\n| AC5 | A 2,000-invoice export finishes in under 5 seconds | Pass | A generated 2,000-invoice file (with commas and quotes in names) exported in 0.012 s, 2,001 lines. |\n\nNon-functional: no new dependency. `bin/invoices` uses only POSIX shell and awk.\n\n## Cause of the AC3 failure\nIn `bin/invoices`, the csv branch has `if ($i ~ /,/) $i = \"\\\"\" $i \"\\\"\"`. It checks only for a comma. It never checks for a double quote, and it never doubles inner quotes. A name like `Initech \"West\"` therefore goes out unquoted, and a spreadsheet will misread that row. A name with both a comma and a quote would be wrapped but its inner quotes would stay single. I did not change the code. Fixing it belongs to Build.\n\n## Test gaps\n`verify.sh` reports `6 passed, 0 failed`, but that result hides the AC3 failure.\n- `plan.md` maps AC3 to a \"a customer with a double quote is quoted\" test. That test doesn't exist in `tests/test_csv.sh`, so nothing catches the bug.\n- `plan.md` maps AC5 to a \"2,000 invoices export in under 5 seconds\" test. That test doesn't exist either. I checked AC5 by hand only.\n- The `tests/test_list.sh` checks count lines, not bytes, so AC4 isn't proven by the suite. I compared bytes against the base commit by hand.\n\n## Departures from the spec and plan\n- No `lib/csv.awk`. Quoting is inline in `bin/invoices`. The plan records this as a departure that Lee agreed to on 2026-11-06, so I did not flag it.\n- One PR instead of the RFC's two. This is also recorded in the plan.\n\n## What to do next\n1. Build: make the quoting wrap a field that contains a comma or a double quote, and double each inner quote.\n2. Add the two missing tests (double quote, 2,000 invoices) and a byte-for-byte AC4 check.\n3. Re-run this stage. Lee shouldn't approve Test until AC3 passes.\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.9166666666666666,
+            "passed": false,
+            "turns": 7,
+            "costUsd": 0.1470995,
+            "judgeCostUsd": 0.018401999999999988,
+            "durationSeconds": 35,
+            "startedAt": "2026-11-12T20:49:10.042Z",
+            "error": null,
+            "tracePath": "/private/tmp/e-DLOVE5/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "adds-a-phase-for-the-failure",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in file docs/sdlc/csv-export/plan.md",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "catches-the-quote-bug",
+                "passed": true,
+                "weight": 4,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nBranch: `sam/csv-export`\nVerdict: **Not ready to approve.** AC3 fails: a field with a double quote is not quoted or doubled.\n\n## Result per acceptance criterion\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | Header plus four rows | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. Covered by an automated test. |\n| AC2 | `--status open --csv` prints the header and three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. Covered by an automated test. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` | **Fail** | The INV-002 row matches. INV-004 prints as `INV-004,Initech \"West\",4500.00,open`. See the finding below. |\n| AC4 | `bin/invoices list` output is byte-identical to before | Pass | I ran `bin/invoices` from `2a60f9c^` (before the build) and the current one. `cmp` found no difference for `list` and for `list --status open`. |\n| AC5 | 2,000 invoices export in under 5 seconds | Pass, with no test | A generated 2,000-invoice file exported in 0.012s with `INVOICES_FILE` set. No test in the repo covers this. |\n\n## Finding: double quotes are not handled (R3, AC3)\nIn `bin/invoices`, the CSV branch quotes a field only when it contains a comma (`$i ~ /,/`). It never checks for a double quote and never doubles inner quotes.\n\n- **Customer `Initech \"West\"`:** it has a quote but no comma, so it prints as `Initech \"West\"`. A spreadsheet will read that field wrongly.\n- **A customer with both, like `Cust, 1 \"x\"`:** it gets wrapped, but the inner quote is left single. It prints as `\"Cust, 1 \"x\"\"`, which is malformed CSV. I saw this in the 2,000-row file.\n\nThe fix is small. Wrap when the field matches `/[,\"]/`, and run `gsub(/\"/, \"\\\"\\\"\")` on the field before wrapping.\n\n## Test coverage gaps\n`sh verify.sh` ends with `6 passed, 0 failed`, but it does not cover the failing case.\n\n- `plan.md` lists a test, \"a customer with a double quote is quoted\", for AC3. It was never written, so verify stays green while AC3 fails.\n- `plan.md` lists a test, \"2,000 invoices export in under 5 seconds\", for AC5. It was never written either.\n\n## Departures from the plan\n- The quoting is inline in `bin/invoices`, and `lib/csv.awk` does not exist. `plan.md` already records this and Lee agreed on 2026-11-06.\n- Both phases went into one PR instead of two. `plan.md` records this too.\n\n## What I did not run\n- `pr-review` and the testing toolkit are not installed on this machine, so I skipped them. Nothing here covers what they would have checked.\n\n## Commands run\n- `sh verify.sh`: `6 passed, 0 failed`\n- `bin/invoices list --csv` and `bin/invoices list --status open --csv`: output compared with AC1 to AC3 by eye and with `grep -xF`\n- `cmp` of old and new `list` output, with and without `--status open`\n- A 2,000-invoice file built with awk, then `time INVOICES_FILE=<file> bin/invoices list --csv`\n"
+              },
+              {
+                "name": "evidence-per-criterion",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "# CSV export for the invoice list — verification\n\nBranch: `sam/csv-export`\nVerdict: **Not ready to approve.** AC3 fails: a field with a double quote is not quoted or doubled.\n\n## Result per acceptance criterion\n| Id | Criterion | Result | Evidence |\n|---|---|---|---|\n| AC1 | Header plus four rows | Pass | `bin/invoices list --csv` printed `id,customer,amount,status` and four rows. Covered by an automated test. |\n| AC2 | `--status open --csv` prints the header and three open invoices | Pass | Output was the header plus INV-001, INV-003 and INV-004. Covered by an automated test. |\n| AC3 | Rows `INV-002,\"Acme, Inc.\",310.50,paid` and `INV-004,\"Initech \"\"West\"\"\",4500.00,open` | **Fail** | The INV-002 row matches. INV-004 prints as `INV-004,Initech \"West\",4500.00,open`. See the finding below. |\n| AC4 | `bin/invoices list` output is byte-identical to before | Pass | I ran `bin/invoices` from `2a60f9c^` (before the build) and the current one. `cmp` found no difference for `list` and for `list --status open`. |\n| AC5 | 2,000 invoices export in under 5 seconds | Pass, with no test | A generated 2,000-invoice file exported in 0.012s with `INVOICES_FILE` set. No test in the repo covers this. |\n\n## Finding: double quotes are not handled (R3, AC3)\nIn `bin/invoices`, the CSV branch quotes a field only when it contains a comma (`$i ~ /,/`). It never checks for a double quote and never doubles inner quotes.\n\n- **Customer `Initech \"West\"`:** it has a quote but no comma, so it prints as `Initech \"West\"`. A spreadsheet will read that field wrongly.\n- **A customer with both, like `Cust, 1 \"x\"`:** it gets wrapped, but the inner quote is left single. It prints as `\"Cust, 1 \"x\"\"`, which is malformed CSV. I saw this in the 2,000-row file.\n\nThe fix is small. Wrap when the field matches `/[,\"]/`, and run `gsub(/\"/, \"\\\"\\\"\")` on the field before wrapping.\n\n## Test coverage gaps\n`sh verify.sh` ends with `6 passed, 0 failed`, but it does not cover the failing case.\n\n- `plan.md` lists a test, \"a customer with a double quote is quoted\", for AC3. It was never written, so verify stays green while AC3 fails.\n- `plan.md` lists a test, \"2,000 invoices export in under 5 seconds\", for AC5. It was never written either.\n\n## Departures from the plan\n- The quoting is inline in `bin/invoices`, and `lib/csv.awk` does not exist. `plan.md` already records this and Lee agreed on 2026-11-06.\n- Both phases went into one PR instead of two. `plan.md` records this too.\n\n## What I did not run\n- `pr-review` and the testing toolkit are not installed on this machine, so I skipped them. Nothing here covers what they would have checked.\n\n## Commands run\n- `sh verify.sh`: `6 passed, 0 failed`\n- `bin/invoices list --csv` and `bin/invoices list --status open --csv`: output compared with AC1 to AC3 by eye and with `grep -xF`\n- `cmp` of old and new `list` output, with and without `--status open`\n- A 2,000-invoice file built with awk, then `time INVOICES_FILE=<file> bin/invoices list --csv`\n"
+              },
+              {
+                "name": "leaves-the-fix-to-build",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched if \\(\\$i ~ /,/\\)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-self-approved",
+                "passed": true,
+                "weight": 3,
+                "explanation": "found 5 matches (expected 5)",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "verify-written",
+                "passed": true,
+                "weight": 1,
+                "explanation": "docs/sdlc/csv-export/verify.md exists as expected",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0.9166666666666666,
+        "passRateWithout": 0,
+        "delta": 0.08333333333333337
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 3,
+    "casesPassed": 2,
+    "overallScore": 0.9761904761904762,
+    "overallPassRate": 0.8888888888888888,
+    "meanDelta": 0.07539682539682539
+  }
+}
