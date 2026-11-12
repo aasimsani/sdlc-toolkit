@@ -99,6 +99,20 @@ state '  test: {status: approved, artifact: verify.md, tools: {testing: testing/
 check "Test isn't approved without the test audit on record"  deny  "$T/led" "$c"
 state '  plan: {status: approved, artifact: plan.md, tools: {goldfish: egm/spec-review.md}}'
 check "Plan isn't approved without the testing toolkit on record" deny "$T/led" "$c"
+touch "$L/rfc.src.html" "$L/testing/audit.md"
+state '  rfc: {status: approved, artifact: rfc.src.html, tools: {rfc-skill: rfc.src.html, goldfish: egm/spec-review.md}}'
+check "RFC isn't approved without the formal check on record" deny  "$T/led" "$c"
+state '  rfc: {status: approved, artifact: rfc.src.html, tools: {rfc-skill: rfc.src.html, formal-verification: "skipped: no claim earns a formal check", goldfish: egm/spec-review.md}}'
+check "a formal check that found no claim is a recorded skip"   allow "$T/led" "$c"
+all_test='testing: testing/test.md, test-audit: testing/audit.md, verifier: verify.md, pr-review: pr-review/build-1.md'
+state "  test: {status: approved, artifact: verify.md, tools: {$all_test}}"
+check "Test needs no second model when the design wasn't modelled" allow "$T/led" "$c"
+mkdir -p "$L/fv/design"; touch "$L/fv/design/README.md"
+check "a modelled design owes Test a model written from the code" deny "$T/led" "$c"
+touch "$L/fv/code-report.md"
+state "  test: {status: approved, artifact: verify.md, tools: {$all_test, fv-verifier: fv/code-report.md}}"
+check "the second model's report settles it"                  allow "$T/led" "$c"
+rm -r "$L/fv"
 state '  spec:' '    status: approved' '    tools:' '      goldfish: egm/spec-review.md'
 check "a block-style entry is read the same way"             allow "$T/led" "$c"
 state '  spec:' '    status: approved' '    tools:' '      goldfish: skipped' '    artifact: spec.md'

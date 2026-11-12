@@ -49,7 +49,7 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 |---|---|
 | Intent | `goldfish` |
 | Spec | `goldfish` |
-| RFC | `rfc-skill`, `goldfish` |
+| RFC | `rfc-skill`, `formal-verification`, `goldfish` |
 | Plan | `testing`, `goldfish` |
 | Build | `ponytail`, `testing`, `pr-review` |
 | Test | `testing`, `test-audit`, `verifier`, `pr-review` |
@@ -59,6 +59,7 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 
 - `goldfish` is the stage's EGM review, and its file is the report under `egm/`.
 - `rfc-skill` is the `rfc` skill, and its file is `rfc.src.html`.
+- `formal-verification` is the fv-toolkit's `formal-verification` skill, and its file is the property ledger, `fv/design/README.md`. When its triage finds no claim to check, that's the skip reason. When the ledger exists, Test also accounts for `fv-verifier`, the subagent that models the code afresh, and its file is `fv/code-report.md`.
 - `ponytail` is ponytail mode during Build. It writes no file of its own, so its file is the last Build pr-review report, whose ponytail lens checked the code.
 - `testing` is the testing toolkit's `testing` skill. At Plan its file is `plan.md`, whose Tests section holds the skill's choice. At Build and Test its file is the stage's report under `testing/`.
 - `test-audit` is the testing toolkit's `test-audit` skill, and its file is its ledger, `testing/audit.md`.

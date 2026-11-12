@@ -34,9 +34,15 @@ description: One-time setup that prepares a repo, and this machine, for the /sdl
    claude plugin install testing-toolkit@testing-toolkit
    ```
 
-6. **Check pr-review's tools.** Make sure `gh auth status` passes and `jq` is on `PATH`.
+6. **Install the formal-verification toolkit (optional).** Offer it when the team's features make claims about ordering, retries, permissions or rule tables. Its checkers need a JDK 17 or later, and its skill installs each one the first time it's needed. If the user wants it, run:
+   ```bash
+   claude plugin marketplace add aasimsani/formal-verification-toolkit
+   claude plugin install fv-toolkit@formal-verification-toolkit
+   ```
 
-7. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
+7. **Check pr-review's tools.** Make sure `gh auth status` passes and `jq` is on `PATH`.
+
+8. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
 
 ## Repo
 

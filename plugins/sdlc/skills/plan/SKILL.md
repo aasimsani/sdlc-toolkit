@@ -18,7 +18,7 @@ Feature: `$ARGUMENTS`
 
 2. **Read `spec.md`, the RFC and every file the change touches,** along with the tests around those files.
 
-3. **Decide the tests.** Invoke `testing-toolkit:testing`, with the inputs and overrides in `testing-toolkit.md`. It classifies the change and picks a kind of test for each component, and it writes no test in this stage. Then sort each test into the Build tests, which drive a phase's code, or the final tests, which need the whole feature. `testing-toolkit.md` has the rule. Without the toolkit, choose and sort the tests yourself.
+3. **Decide the tests.** Invoke `testing-toolkit:testing`, with the inputs and overrides in `testing-toolkit.md`. It classifies the change and picks a kind of test for each component, and it writes no test in this stage. Then sort each test into the Build tests, which drive a phase's code, or the final tests, which need the whole feature. `testing-toolkit.md` has the rule. When the RFC stage left a property ledger in `fv/design/`, pass it too, so each confirmed property gets its tests, as `${CLAUDE_PLUGIN_ROOT}/references/fv-toolkit.md` describes. Without the toolkit, choose and sort the tests yourself.
 
 4. **Draft the plan** with the template's sections. Keep the RFC's phases and PR boundaries. Put the chosen tests in the Tests section. Every acceptance criterion must map to a test, and every phase takes its first failing test from its Build rows. Describe every phase, and write todos for the first phase only.
 
