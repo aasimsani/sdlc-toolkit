@@ -7,10 +7,27 @@
   },
   "dependencies": [
     "sdlc",
-    { "name": "egm", "marketplace": "egm" },
-    { "name": "pr-review", "marketplace": "aasimsani-pr-review", "version": ">=1.3.0" },
-    { "name": "ponytail", "marketplace": "ponytail" },
-    { "name": "testing-toolkit", "marketplace": "testing-toolkit" },
-    { "name": "fv-toolkit", "marketplace": "formal-verification-toolkit" }
-  ]
+    {
+      "name": "egm",
+      "marketplace": "egm"
+    },
+    {
+      "name": "pr-review",
+      "marketplace": "aasimsani-pr-review",
+      "version": ">=1.3.0"
+    },
+    {
+      "name": "ponytail",
+      "marketplace": "ponytail"
+    },
+    {
+      "name": "testing-toolkit",
+      "marketplace": "testing-toolkit"
+    },
+    {
+      "name": "fv-toolkit",
+      "marketplace": "formal-verification-toolkit"
+    }
+  ],
+  "license": "MIT"
 }

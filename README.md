@@ -327,6 +327,20 @@ The hook is opt-in per repo, and it's a file the team can read and change. To ga
 
 Superpowers and agent-skills define their own lifecycles, and some of their skills repeat what a stage already does. [`references/companions.md`](plugins/sdlc/references/companions.md) is a stage-by-stage table of which of their skills add something and which repeat the stage. Inside a stage, the stage is the workflow, and a companion skill supplies know-how for one step. Edit that table to add another plugin or to change a call.
 
+## Credits
+
+The loop borrows from other people's work. Each row says what it took.
+
+| From | What the loop took |
+|---|---|
+| Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook) | The stages and their gates, and an intent in place of a backlog entry |
+| Google's [Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model) | Reviewers that read a document with no memory of the conversation that produced it. Every document stage runs one of its skills. |
+| [pstack](https://github.com/cursor/plugins/tree/main/pstack), by Lauren Tan | Five habits, as one to three lines each: a stop rule for the review loop, a check before a line in `CLAUDE.md`, pause and pickup in Build, a verification skill for the app, and a blind fixture for the evals. Putting a stage's steps in the task list, and keeping a skipped step there with its reason, came from pstack too. |
+| [ponytail](https://github.com/DietrichGebert/ponytail) | The ladder in Plan, the mode in Build, the review lens, and the audit in Maintain |
+| Anthropic's [context-engineering post](https://claude.dev/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models/) | Loading the plugin's text in layers, so a session pays only for the stage it runs |
+
+The [testing toolkit](https://github.com/aasimsani/testing-toolkit) and the [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) list their own sources. The fv-toolkit's are in its `NOTICE.md`.
+
 ## Extending
 
 Most extensions are a markdown file in the target repo or one line in `sdlc.yaml`. Plugin edits are needed only to change what a stage does.
@@ -527,7 +541,7 @@ The run's [report](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/report.h
 
 Three graders failed in one run each. In one Build run, the tests and the code landed in one commit. In one Plan run, the judge voted two to one that a row had no kind. In one second-model run, the stage didn't run `fv-pin check` before it dispatched the subagent.
 
-The suite's first runs scored lower, and they found two gaps in the plugin that the single-plugin cases couldn't see:
+The suite's first runs scored lower: 0.61 on the Build case and 0.48 on the second-model case. They found two gaps in the plugin that the single-plugin cases couldn't see:
 
 - **Build wrote the planned tests by hand.** The plan already named them, so it skipped the toolkit, and with it the planted-bug check and the report. Test did the same with the audit in one run of two. `stage-rules.md` now says that a step's named skill or subagent is invoked, and that work done by hand counts as a skipped tool.
 - **Test ended its turn while `fv-verifier` was still working.** A session that isn't interactive stops there, so the report never appeared. The stage now waits for a subagent's report.
@@ -543,3 +557,7 @@ claude plugin validate plugins/sdlc-stack   # the dependency list
 claude --plugin-dir plugins/sdlc      # try local edits without reinstalling
 claude plugin update sdlc@sdlc-toolkit
 ```
+
+## License
+
+MIT. See `LICENSE`.
