@@ -557,3 +557,7 @@ claude plugin validate plugins/sdlc-stack   # the dependency list
 claude --plugin-dir plugins/sdlc      # try local edits without reinstalling
 claude plugin update sdlc@sdlc-toolkit
 ```
+
+## License
+
+MIT. See `LICENSE`.

@@ -4,5 +4,6 @@
   "version": "0.9.1",
   "author": {
     "name": "Aasim Sani"
-  }
+  },
+  "license": "MIT"
 }
