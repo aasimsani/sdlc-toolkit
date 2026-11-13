@@ -333,7 +333,7 @@ The loop borrows from other people's work. Each row says what it took.
 
 | From | What the loop took |
 |---|---|
-| Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook) | The stages and their gates, and an intent in place of a backlog entry |
+| Anthropic's [AI-native SDLC playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook), by Louis Claxton | The order of the work, a gate after each step, an intent in place of a backlog entry, and the rule that the agent that wrote the code can't approve it. The playbook has six phases, and this loop has nine stages. |
 | Google's [Elephant-Goldfish Model](https://github.com/google/elephant-goldfish-model) | Reviewers that read a document with no memory of the conversation that produced it. Every document stage runs one of its skills. |
 | [pstack](https://github.com/cursor/plugins/tree/main/pstack), by Lauren Tan | Five habits, as one to three lines each: a stop rule for the review loop, a check before a line in `CLAUDE.md`, pause and pickup in Build, a verification skill for the app, and a blind fixture for the evals. Putting a stage's steps in the task list, and keeping a skipped step there with its reason, came from pstack too. |
 | [ponytail](https://github.com/DietrichGebert/ponytail) | The ladder in Plan, the mode in Build, the review lens, and the audit in Maintain |
