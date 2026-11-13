@@ -70,4 +70,9 @@ check "setup lists every plugin the stack depends on (unlisted: ${unlisted:-none
 # A name prefix matched two pr-review plugins from different marketplaces, so a lookup names the full id.
 check "every plugin lookup names a full id ($(files_matching 'startswith\("[a-z-]+@"'))" '[ -z "$(files_matching "startswith\(\"[a-z-]+@\"")" ]'
 
+# The integration suite measures the stages with the toolkits beside them. A case that loads fewer plugins would measure sdlc alone.
+INT="$(cd "$(dirname "$0")/.." && pwd)/evals-integration"
+partial="$(for c in "$INT"/*/*/case.yaml; do for pl in plugins/sdlc .toolkits/testing-toolkit .toolkits/fv-toolkit; do grep -q "$pl" "$c" || echo "${c#"$INT"/}"; done; done | sort -u | tr '\n' ' ')"
+check "every integration case loads sdlc and both toolkits (partial: ${partial:-none})" '[ -n "$(ls "$INT"/*/*/case.yaml 2>/dev/null)" ] && [ -z "$partial" ]'
+
 exit "$fail"
