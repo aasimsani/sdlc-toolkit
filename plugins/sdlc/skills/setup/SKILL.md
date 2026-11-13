@@ -1,48 +1,39 @@
 ---
 name: setup
-description: One-time setup that prepares a repo, and this machine, for the /sdlc loop. Installs the EGM, pr-review, ponytail and testing-toolkit plugins if they're missing, and sets up CLAUDE.md, one verify command, REVIEW.md and docs/sdlc/. Use when the user runs /sdlc:setup, or when the sdlc skill reports that something is missing.
+description: One-time setup that prepares a repo, and this machine, for the /sdlc loop. Installs sdlc-stack, which brings in the EGM, pr-review, ponytail, testing-toolkit and fv-toolkit plugins, and sets up CLAUDE.md, one verify command, REVIEW.md and docs/sdlc/. Use when the user runs /sdlc:setup, or when the sdlc skill reports that something is missing.
 ---
 
 # SDLC setup (once per machine, once per repo)
 
 ## Machine
 
+The stages call five other plugins. `sdlc-stack` is a plugin in this marketplace with no skills of its own. Its manifest declares those five as dependencies, so Claude Code installs them, keeps them enabled, and reports any that go missing.
+
+| Plugin | Add its marketplace from | The loop uses it for |
+|---|---|---|
+| `egm@egm` | `google/elephant-goldfish-model` | The Goldfish review of each document |
+| `pr-review@aasimsani-pr-review` | `aasimsani/pr-review` | Code review in a fresh session. The stack needs 1.3.0 or later. |
+| `ponytail@ponytail` | `DietrichGebert/ponytail` | The smallest plan and the smallest code |
+| `testing-toolkit@testing-toolkit` | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests |
+| `fv-toolkit@formal-verification-toolkit` | `aasimsani/formal-verification-toolkit` | Formal checks of a design's claims |
+
 1. **Check Claude Code.** Run `claude --version`. EGM needs 2.1.271 or later to isolate its Goldfish reviewers. If the version is older, tell the user to update before using the loop.
 
-2. **Install EGM** if `claude plugin list --json` shows no enabled `egm@` plugin. Ask first, then run:
+2. **Install the stack.** Ask first, then run `claude plugin install sdlc-stack@sdlc-toolkit`. It installs each dependency whose marketplace is already added, and it names the ones it couldn't find.
+
+3. **Add each marketplace that's missing.** `claude plugin marketplace list --json` shows the ones already added. For each row of the table that isn't there, ask first, then run `claude plugin marketplace add <source>`. Adding a marketplace installs that row's plugin, because the stack depends on it.
+
+4. **Confirm the stack.** Run:
    ```bash
-   claude plugin marketplace add google/elephant-goldfish-model
-   claude plugin install egm@egm
+   claude plugin list --json | jq -r '.[] | select(.id == "sdlc-stack@sdlc-toolkit") | .errors // [] | .[]'
    ```
+   It prints nothing when every dependency is installed, enabled and new enough. Otherwise each line names one dependency and the command that fixes it.
 
-3. **Install pr-review** if no enabled `pr-review@` plugin exists. Ask first, then run:
-   ```bash
-   claude plugin marketplace add aasimsani/pr-review
-   claude plugin install pr-review@aasimsani-pr-review
-   ```
-   If the `claude plugin list --json` output shows two enabled `pr-review@` plugins, ask the user which one to keep and disable the other. Two copies share the skill name `pr-review:pr-review`.
+5. **Offer updates.** A dependency installed long ago can be behind its marketplace. Offer `claude plugin update <plugin>` for each row. Another marketplace's plugin of the same name, such as a second `pr-review`, can stay enabled, because the loop finds each plugin by its full id.
 
-4. **Install ponytail** if no enabled `ponytail@` plugin exists. Ask first, then run:
-   ```bash
-   claude plugin marketplace add DietrichGebert/ponytail
-   claude plugin install ponytail@ponytail
-   ```
+6. **Check the tools.** Make sure `gh auth status` passes and `jq` is on `PATH`, because pr-review needs both. Run `java -version` too. The fv-toolkit's checkers need a JDK 17 or later, and without one a formal check reports "not checked".
 
-5. **Install the testing toolkit** if no enabled `testing-toolkit@` plugin exists. Ask first, then run:
-   ```bash
-   claude plugin marketplace add aasimsani/testing-toolkit
-   claude plugin install testing-toolkit@testing-toolkit
-   ```
-
-6. **Install the formal-verification toolkit (optional).** Offer it when the team's features make claims about ordering, retries, permissions or rule tables. Its checkers need a JDK 17 or later, and its skill installs each one the first time it's needed. If the user wants it, run:
-   ```bash
-   claude plugin marketplace add aasimsani/formal-verification-toolkit
-   claude plugin install fv-toolkit@formal-verification-toolkit
-   ```
-
-7. **Check pr-review's tools.** Make sure `gh auth status` passes and `jq` is on `PATH`.
-
-8. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
+7. **Restart.** If you installed anything, tell the user to start a new session so the plugins load.
 
 ## Repo
 

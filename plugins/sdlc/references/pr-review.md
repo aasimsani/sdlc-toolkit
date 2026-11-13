@@ -5,7 +5,7 @@ pr-review runs a headless code review in a fresh session, so the reviewer has no
 ## Find the script
 
 ```bash
-claude plugin list --json | jq -r '.[] | select(.enabled and (.id | startswith("pr-review@"))) | .installPath'
+claude plugin list --json | jq -r '.[] | select(.enabled and .id == "pr-review@aasimsani-pr-review") | .installPath'
 ```
 
 The command prints `PR_REVIEW_ROOT`, and the script is `$PR_REVIEW_ROOT/skills/pr-review/pr-review.sh`. If it prints nothing, pr-review isn't installed or isn't enabled, so tell the user to run `sdlc:setup`. Never guess the path.

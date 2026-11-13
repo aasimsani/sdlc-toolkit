@@ -1,6 +1,6 @@
 # sdlc-toolkit
 
-A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes the ones that drive the code in Build, and writes the final ones, checks them all and audits the suite in Test. The optional [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) checks a design's never-and-always claims in a model before any code exists, and Test checks them again in a second model written from the code.
+A Claude Code plugin that runs a feature through the loop in Anthropic's [AI-Native SDLC Playbook](https://claude.com/resources/articles/the-ai-native-sdlc-playbook). Each stage ends by committing one artifact under `docs/sdlc/<slug>/` in the target repo, and that commit starts the next stage. Agents with fresh context review every artifact: [EGM](https://github.com/google/elephant-goldfish-model) Goldfish reviewers check the documents, and [pr-review](https://github.com/aasimsani/pr-review) checks the code. The [testing toolkit](https://github.com/aasimsani/testing-toolkit) decides the tests in Plan, writes the ones that drive the code in Build, and writes the final ones, checks them all and audits the suite in Test. The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) checks a design's never-and-always claims in a model before any code exists, and Test checks them again in a second model written from the code.
 
 ```
 intent → spec → RFC → plan → build → test → ship → ADR → maintain
@@ -29,7 +29,25 @@ claude plugin marketplace add aasimsani/sdlc-toolkit
 claude plugin install sdlc@sdlc-toolkit
 ```
 
-Then run `/sdlc:setup` in a repo. It installs EGM, pr-review, [ponytail](https://github.com/DietrichGebert/ponytail) and the testing toolkit if they're missing, and it offers the fv-toolkit, which is optional. It also makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists. It offers a verification skill for the app and the gate hook.
+Then run `/sdlc:setup` in a repo. It installs the plugins the stages call, makes sure `CLAUDE.md` names one verify command and that `REVIEW.md` exists, and offers a verification skill for the app and the gate hook.
+
+### Dependencies
+
+The stages call five other plugins. The marketplace has a second plugin, `sdlc-stack`, whose manifest declares them as [dependencies](https://code.claude.com/docs/en/plugin-dependencies). It has no skills of its own. `/sdlc:setup` installs it, and Claude Code does the tracking from there.
+
+| Plugin | Marketplace source | The loop uses it for |
+|---|---|---|
+| `egm@egm` | `google/elephant-goldfish-model` | The Goldfish review of each document |
+| `pr-review@aasimsani-pr-review`, 1.3.0 or later | `aasimsani/pr-review` | Code review in a fresh session |
+| `ponytail@ponytail` | `DietrichGebert/ponytail` | The smallest plan and the smallest code |
+| `testing-toolkit@testing-toolkit` | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests |
+| `fv-toolkit@formal-verification-toolkit` | `aasimsani/formal-verification-toolkit` | Formal checks of a design's claims |
+
+- **Installing.** `claude plugin install sdlc-stack@sdlc-toolkit` installs each dependency whose marketplace is already added. Adding a missing marketplace then installs its plugin without another command.
+- **Checking.** `claude plugin list` shows the stack as `enabled`, or as `failed to load` with the name of the dependency that's missing or too old.
+- **Protecting.** Claude Code refuses to disable a plugin while the stack still needs it.
+
+The `sdlc` plugin declares no dependencies itself, because a plugin with a missing dependency doesn't load, and `/sdlc:setup` then couldn't run to fix it. Without the stack, each stage still runs, and it records a missing tool as skipped. The stages find each plugin by its full id, so another marketplace's plugin of the same name can stay enabled.
 
 ## Use
 
@@ -110,7 +128,7 @@ flowchart TB
 | 🟥 | The `rfc` skill | Writes the RFC, and later the ADR, as an HTML page a reviewer can read |
 | 🟩 | [Testing toolkit](https://github.com/aasimsani/testing-toolkit) | Decides the tests in Plan, writes the Build tests before the code, and in Test writes the final tests, checks them all and audits the suite |
 | 🟨 | [ponytail](https://github.com/DietrichGebert/ponytail) | Keeps the plan and the code as small as they can be |
-| 🟫 | [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit), optional | Checks a design's claims in a model at RFC, models the code afresh in Test through this plugin's `fv-verifier` subagent, and keeps the models in step in Maintain |
+| 🟫 | [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) | Checks a design's claims in a model at RFC, models the code afresh in Test through this plugin's `fv-verifier` subagent, and keeps the models in step in Maintain |
 | 🟪 | [pr-review](https://github.com/aasimsani/pr-review) | Reviews code in a fresh session that has none of the build session's context |
 | ⬜ | This plugin, or whatever the session has | The `verifier` subagent is this plugin's own. Policy skills and observability tools come from the session. |
 
@@ -353,7 +371,7 @@ The audit is the stage's last change to the tests. It runs before the verify com
 
 ### Formal checks (fv-toolkit)
 
-The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) is optional. It settles a claim that says never, always, at most once or exactly once, by trying every ordering or every small structure in a model. Most features have no such claim, and its triage says so in one paragraph.
+The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) settles a claim that says never, always, at most once or exactly once, by trying every ordering or every small structure in a model. Most features have no such claim, and its triage says so in one paragraph.
 
 | Stage | What happens | Where the result goes |
 |---|---|---|
@@ -364,7 +382,7 @@ The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) is op
 | Test | The `fv-verifier` subagent writes a second model from the code. It gets the spec and the properties as sentences, and never sees the RFC, the plan or the first model. The stage compares the two models property by property. | `fv/code-report.md`, and the model beside the code |
 | Maintain | In `drift` mode, `fv-maintain` says whether each model still describes the code, and whether a failure is drift in the model or a bug in the code | A new intent for each bug |
 
-The second model is kept and the first stays with the RFC, so each behaviour has one model to keep in step. A pass is bounded by the sizes and faults that were checked, and `verify.md` says so. [`references/fv-toolkit.md`](plugins/sdlc/references/fv-toolkit.md) has what each stage passes to the toolkit. Without the toolkit, the RFC stage names each such claim to the approver and records the skip.
+The second model is kept and the first stays with the RFC, so each behaviour has one model to keep in step. A pass is bounded by the sizes and faults that were checked, and `verify.md` says so. [`references/fv-toolkit.md`](plugins/sdlc/references/fv-toolkit.md) has what each stage passes to the toolkit. Its checkers need a JDK 17 or later. Without the toolkit, the RFC stage names each such claim to the approver and records the skip.
 
 ### Document reviewers (EGM)
 
@@ -385,7 +403,7 @@ The Spec stage applies every policy skill in the session, such as security, comp
 - **Teach the verifier your app.** `/sdlc:setup` offers a project skill at `.claude/skills/verify-<app>/` that says how to launch and drive the app. The Test stage's verifier reads it, and each feature adds its own file to it.
 - **Swap a tool.** Each tool has its own file under `references/`, and each stage names the ones it uses in its first paragraph. For example, the RFC stage uses the `rfc` skill when it's installed, and `egm-draft` when it isn't.
 
-After editing the plugin, bump `version` in `plugins/sdlc/.claude-plugin/plugin.json` and run `claude plugin update sdlc@sdlc-toolkit`.
+After editing the plugin, bump `version` in `plugins/sdlc/.claude-plugin/plugin.json` and run `claude plugin update sdlc@sdlc-toolkit`. To add or change a plugin the stages call, edit the `dependencies` in `plugins/sdlc-stack/.claude-plugin/plugin.json`, the allowlist in `.claude-plugin/marketplace.json` and the table in `skills/setup/SKILL.md`. `tests/test_structure.sh` fails when the table misses one.
 
 ## Cost
 
@@ -426,7 +444,7 @@ Each case runs three times with the plugin and three times without it, so a full
 
 The suite has three limits:
 
-- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run, the testing toolkit's choice of tests, a formal check or a written RFC.
+- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in a run of these seventeen cases. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. The [integration suite](#with-the-toolkits-loaded) loads the two toolkits. Nothing measures a Goldfish review, a pr-review run or a written RFC.
 - The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 
@@ -477,12 +495,51 @@ Two things help when reading the tables:
 - Three runs per arm is a small sample, so a gap of 0.1 between two cases or two runs means little.
 - `route/status-board` scores 1.00 with no skill invoked, because the status line at session start already holds the answer.
 
+### With the toolkits loaded
+
+`evals-integration/` holds a second suite of five cases. Each one loads the `sdlc` plugin together with the installed `testing-toolkit` and `fv-toolkit`, under their real skill names. It measures what the seventeen cases above can't: that a stage invokes the toolkit's skill and gets the toolkit's own output, such as a model that TLC has checked or a set of planned tests with a kind for each.
+
+```bash
+evals-integration/run.sh                     # all five cases, three runs each
+evals-integration/run.sh --tag rfc --runs 1  # one group, once
+```
+
+The script does three things a plain `claude plugin eval` can't do for this suite:
+
+- **It copies the installed toolkits into `.toolkits/`.** A case lists its plugins in `case.yaml`, and an eval may load only plugins that sit under the directory it runs against. So the suite runs against the repo root, and the copies are ignored by git.
+- **It puts a real JDK and Homebrew first on `PATH`.** On macOS, `/usr/bin/java`, `/usr/bin/python3` and `/usr/bin/git` are launchers that fail inside the eval sandbox, and the fv-toolkit's checkers need Java and Python.
+- **It runs one arm.** Under the two-arm mode a grader on a Skill call isn't scored, and those calls are what this suite measures. So the suite has no no-plugin baseline.
+
+EGM, pr-review and ponytail still aren't loaded, and each prompt says so.
+
+The last full run was on 2026-11-12, with `sdlc` 0.9.0, `testing-toolkit` 0.1.1 and `fv-toolkit` 0.1.0 on Claude Code 2.1.323. Claude Sonnet 5.5 was the model under test and the judge. Each case ran three times.
+
+| Case | It passes when | Score | The call it checks | Runs that made it |
+|---|---|---|---|---|
+| `plan/typed-tests` | The plan's Tests section names a kind for every test, and gives the 2,000-invoice timing test to the Test stage as a load test | 0.98 | `testing-toolkit:testing` | 3 of 3 |
+| `build/proven-tests` | The phase's tests fail before the code exists, one is seen to fail on a planted bug, the report is saved, and the final test is left alone | 0.99 | `testing-toolkit:testing` | 3 of 3 |
+| `test/final-tests-and-audit` | The stage writes the final test, the audit removes a test that always passes and a duplicate, and both quoting tests stay | 1.00 | `testing-toolkit:testing`, then `test-audit` | 3 of 3 |
+| `rfc/design-claim-model` | A TLA+ model of the draft design is checked with TLC, the reply gives the steps that capture more than a voucher's face value, the check fails on planted bugs, and the RFC's capture step is fixed | 1.00 | `fv-toolkit:formal-verification` and `fv-tlaplus`, then the `fv-tlc` and `fv-mutate` scripts | 3 of 3 |
+| `test/second-model` | The `fv-verifier` subagent models the code without the design model, its report shows the code breaking a property the design kept, and the plan gets a Build phase for the fix | 0.98 | The `sdlc:fv-verifier` subagent | 3 of 3 |
+| **Mean of 5 cases** | | **0.99** | | 15 of 15 |
+
+The run's [report](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/aggregate-result.json) are stored like the others. It cost $13.60 at list price.
+
+Three graders failed in one run each. In one Build run, the tests and the code landed in one commit. In one Plan run, the judge voted two to one that a row had no kind. In one second-model run, the stage didn't run `fv-pin check` before it dispatched the subagent.
+
+The suite's first runs scored lower, and they found two gaps in the plugin that the single-plugin cases couldn't see:
+
+- **Build wrote the planned tests by hand.** The plan already named them, so it skipped the toolkit, and with it the planted-bug check and the report. Test did the same with the audit in one run of two. `stage-rules.md` now says that a step's named skill or subagent is invoked, and that work done by hand counts as a skipped tool.
+- **Test ended its turn while `fv-verifier` was still working.** A session that isn't interactive stops there, so the report never appeared. The stage now waits for a subagent's report.
+
 ## Develop
 
 ```bash
 bash tests/test_gate.sh               # the gate hook's decisions, in throwaway repos
 bash tests/test_structure.sh          # every referenced file exists, and each shared rule lives in one file
+evals-integration/run.sh              # the stages with the testing toolkit and the fv-toolkit loaded
 claude plugin validate plugins/sdlc
+claude plugin validate plugins/sdlc-stack   # the dependency list
 claude --plugin-dir plugins/sdlc      # try local edits without reinstalling
 claude plugin update sdlc@sdlc-toolkit
 ```

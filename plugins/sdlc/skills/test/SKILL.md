@@ -20,7 +20,7 @@ Feature: `$ARGUMENTS`
 
 3. **Run the verify command** on a clean checkout of the feature branch, and keep the literal output.
 
-4. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything.
+4. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything. Wait for its report before you write `verify.md`.
 
 5. **Model the code afresh, when the design was modelled.** If the feature has a property ledger, check its pins and dispatch the `fv-verifier` subagent, as `fv-toolkit.md` describes. It writes its own model from the code, without the RFC's model or the plan in view. Compare the two models property by property, and commit the model it wrote. A feature with no ledger skips this step.
 
