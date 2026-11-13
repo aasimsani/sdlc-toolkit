@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: final-tests-and-audit
+# The sdlc plugin with both toolkits beside it. run.sh copies the installed toolkits into .toolkits/.
+plugins: ["../../../plugins/sdlc", "../../../.toolkits/testing-toolkit", "../../../.toolkits/fv-toolkit"]
+context:
+  scaffold_script: fixture.sh

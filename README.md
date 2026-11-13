@@ -444,7 +444,7 @@ Each case runs three times with the plugin and three times without it, so a full
 
 The suite has three limits:
 
-- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in an eval run. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. Nothing here measures a Goldfish review, a pr-review run, the testing toolkit's choice of tests, a formal check or a written RFC.
+- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in a run of these seventeen cases. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. The [integration suite](#with-the-toolkits-loaded) loads the two toolkits. Nothing measures a Goldfish review, a pr-review run or a written RFC.
 - The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 
@@ -495,11 +495,49 @@ Two things help when reading the tables:
 - Three runs per arm is a small sample, so a gap of 0.1 between two cases or two runs means little.
 - `route/status-board` scores 1.00 with no skill invoked, because the status line at session start already holds the answer.
 
+### With the toolkits loaded
+
+`evals-integration/` holds a second suite of five cases. Each one loads the `sdlc` plugin together with the installed `testing-toolkit` and `fv-toolkit`, under their real skill names. It measures what the seventeen cases above can't: that a stage invokes the toolkit's skill and gets the toolkit's own output, such as a model that TLC has checked or a set of planned tests with a kind for each.
+
+```bash
+evals-integration/run.sh                     # all five cases, three runs each
+evals-integration/run.sh --tag rfc --runs 1  # one group, once
+```
+
+The script does three things a plain `claude plugin eval` can't do for this suite:
+
+- **It copies the installed toolkits into `.toolkits/`.** A case lists its plugins in `case.yaml`, and an eval may load only plugins that sit under the directory it runs against. So the suite runs against the repo root, and the copies are ignored by git.
+- **It puts a real JDK and Homebrew first on `PATH`.** On macOS, `/usr/bin/java`, `/usr/bin/python3` and `/usr/bin/git` are launchers that fail inside the eval sandbox, and the fv-toolkit's checkers need Java and Python.
+- **It runs one arm.** Under the two-arm mode a grader on a Skill call isn't scored, and those calls are what this suite measures. So the suite has no no-plugin baseline.
+
+EGM, pr-review and ponytail still aren't loaded, and each prompt says so.
+
+The last full run was on 2026-11-12, with `sdlc` 0.9.0, `testing-toolkit` 0.1.1 and `fv-toolkit` 0.1.0 on Claude Code 2.1.323. Claude Sonnet 5.5 was the model under test and the judge. Each case ran three times.
+
+| Case | It passes when | Score | The call it checks | Runs that made it |
+|---|---|---|---|---|
+| `plan/typed-tests` | The plan's Tests section names a kind for every test, and gives the 2,000-invoice timing test to the Test stage as a load test | 0.98 | `testing-toolkit:testing` | 3 of 3 |
+| `build/proven-tests` | The phase's tests fail before the code exists, one is seen to fail on a planted bug, the report is saved, and the final test is left alone | 0.99 | `testing-toolkit:testing` | 3 of 3 |
+| `test/final-tests-and-audit` | The stage writes the final test, the audit removes a test that always passes and a duplicate, and both quoting tests stay | 1.00 | `testing-toolkit:testing`, then `test-audit` | 3 of 3 |
+| `rfc/design-claim-model` | A TLA+ model of the draft design is checked with TLC, the reply gives the steps that capture more than a voucher's face value, the check fails on planted bugs, and the RFC's capture step is fixed | 1.00 | `fv-toolkit:formal-verification` and `fv-tlaplus`, then the `fv-tlc` and `fv-mutate` scripts | 3 of 3 |
+| `test/second-model` | The `fv-verifier` subagent models the code without the design model, its report shows the code breaking a property the design kept, and the plan gets a Build phase for the fix | 0.98 | The `sdlc:fv-verifier` subagent | 3 of 3 |
+| **Mean of 5 cases** | | **0.99** | | 15 of 15 |
+
+The run's [report](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/aggregate-result.json) are stored like the others. It cost $13.60 at list price.
+
+Three graders failed in one run each. In one Build run, the tests and the code landed in one commit. In one Plan run, the judge voted two to one that a row had no kind. In one second-model run, the stage didn't run `fv-pin check` before it dispatched the subagent.
+
+The suite's first runs scored lower, and they found two gaps in the plugin that the single-plugin cases couldn't see:
+
+- **Build wrote the planned tests by hand.** The plan already named them, so it skipped the toolkit, and with it the planted-bug check and the report. Test did the same with the audit in one run of two. `stage-rules.md` now says that a step's named skill or subagent is invoked, and that work done by hand counts as a skipped tool.
+- **Test ended its turn while `fv-verifier` was still working.** A session that isn't interactive stops there, so the report never appeared. The stage now waits for a subagent's report.
+
 ## Develop
 
 ```bash
 bash tests/test_gate.sh               # the gate hook's decisions, in throwaway repos
 bash tests/test_structure.sh          # every referenced file exists, and each shared rule lives in one file
+evals-integration/run.sh              # the stages with the testing toolkit and the fv-toolkit loaded
 claude plugin validate plugins/sdlc
 claude plugin validate plugins/sdlc-stack   # the dependency list
 claude --plugin-dir plugins/sdlc      # try local edits without reinstalling
