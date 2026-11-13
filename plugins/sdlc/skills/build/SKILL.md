@@ -23,15 +23,15 @@ Feature: `$ARGUMENTS`
 
 1. **Pick the phase.** Take the phase that's `in_progress` in the plan's Phases table. If it has a `Resume:` line, start from there and don't redo a checked todo. If no phase is in progress, take the first `pending` phase whose dependencies are `done`, or the phase the user named. Set it to `in_progress` and write its todos under `## Todos`.
 
-2. **Test first.** Invoke `testing-toolkit:testing` for the phase, with the inputs and overrides in `testing-toolkit.md`. It writes the phase's Build tests from the spec. Those are the tests the plan chose to drive this phase's code. The plan's final tests wait for the Test stage. Without the toolkit, write the Build tests yourself. Run the tests, confirm each one fails for the expected reason, and commit them.
+2. **Test first.** Invoke `testing-toolkit:testing` for the phase, with the inputs and overrides in `testing-toolkit.md`. Invoke it even when the plan names every test, because the skill does more than write them. It takes each expected value from the spec, and after the code passes it proves that each test is stable and fails on a planted bug. It writes the phase's Build tests, which are the tests the plan chose to drive this phase's code. The plan's final tests wait for the Test stage. Write the Build tests yourself only when the session doesn't list that skill. Run the tests, confirm each one fails for the expected reason, and commit them.
 
 3. **Make it pass.** Write the smallest change that makes the test pass, and don't edit the test to make it pass. If the test itself is wrong, stop and tell the user.
 
-4. **Refactor and verify.** Run the verify command and paste the last lines of its output. A phase isn't done until the verify command passes. Then let the testing skill finish its checks on the phase's tests, and save its report.
+4. **Refactor and verify.** Run the verify command and paste the last lines of its output. A phase isn't done until the verify command passes. Then let the testing skill finish its checks on the phase's tests, and add its report to `docs/sdlc/<slug>/testing/build.md` under a heading for the phase.
 
 5. **Review with pr-review.** Commit, then run `pr-review --local` with the ponytail lens and the feature's perspectives, as `pr-review.md` describes. Apply the SIMPLE cuts the owner agrees with now, while the code is cheap to change. Fix the blocking findings, commit the fixes, and run it again until none is open. Report what's fixed, new and still open.
 
-6. **Keep `plan.md` true.** Check off each todo when it's done. When a phase's todos are all checked and its review has no open blocking finding, set the phase to `done`. When the work has to depart from the plan, update `plan.md` in the same commit as the code and say what changed. If the departure changes a requirement or the RFC's design, stop and go back to that stage.
+6. **Keep `plan.md` true.** Check off each todo when it's done. When a phase's todos are all checked, the testing report has the phase's section, and its review has no open blocking finding, set the phase to `done`. When the work has to depart from the plan, update `plan.md` in the same commit as the code and say what changed. If the departure changes a requirement or the RFC's design, stop and go back to that stage.
 
 ## Stopping mid-phase
 

@@ -34,6 +34,8 @@ Every stage runs in one of three modes. The arguments pick the mode, and author 
 
 Before the first step, put the stage's steps in the task list, one item per step. A step you skip stays on the list with its reason.
 
+When a step names a skill or a subagent, invoke it. Don't do its work by hand, even when the step says enough to try, because the tool holds rules that the step doesn't repeat. Do the work yourself only when the session doesn't list the tool. In `sdlc.yaml`, work done by hand counts as a skipped tool, with that reason.
+
 ## The gate
 
 Every stage ends with the same gate.
