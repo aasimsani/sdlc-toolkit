@@ -19,7 +19,7 @@ Keep the sections in this order, with these ids. A section with nothing to show 
 | `#criteria` | Each acceptance criterion with its evidence and its result | `verify.md` |
 | `#demo` | The demo, or the reason there isn't one | `proof/demo.md` |
 | `#formal` | The formal checks, when the design was modelled | `fv/design/README.md`, `fv/code-report.md` |
-| `#tests` | The scenario, the final tests, the tests added to close a gap, and what the audit removed or merged | `testing/test.md`, `testing/audit.md` |
+| `#tests` | The scenario, the final tests, the testing report's `Verified:` line, the tests added to close a gap, and what the audit removed or merged | `testing/test.md`, `testing/audit.md` |
 | `#verifier` | What the verifier ran and saw, and each mismatch with the plan or the spec | `verify.md` |
 | `#review` | The final pr-review's verdict and totals, and each finding that is still open with its reason | the last report under `pr-review/` |
 | `#gaps` | What the stage didn't check, and what a pass doesn't cover | `verify.md` |

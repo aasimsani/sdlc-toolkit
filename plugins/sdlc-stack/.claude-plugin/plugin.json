@@ -1,7 +1,7 @@
 {
   "name": "sdlc-stack",
   "description": "Installs the sdlc plugin together with every plugin its stages call: EGM, pr-review, ponytail, the testing toolkit and the fv-toolkit. It has no skills of its own.",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "author": {
     "name": "Aasim Sani"
   },
@@ -22,7 +22,8 @@
     },
     {
       "name": "testing-toolkit",
-      "marketplace": "testing-toolkit"
+      "marketplace": "testing-toolkit",
+      "version": ">=0.1.2"
     },
     {
       "name": "fv-toolkit",

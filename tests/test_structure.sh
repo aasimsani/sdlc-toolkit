@@ -74,6 +74,13 @@ STACK="$(cd "$(dirname "$0")/.." && pwd)/plugins/sdlc-stack/.claude-plugin/plugi
 check "the sdlc plugin loads without its dependencies" '[ "$(jq ".dependencies // [] | length" "$P/.claude-plugin/plugin.json")" = 0 ]'
 unlisted="$(jq -r '.dependencies[] | objects | "\(.name)@\(.marketplace)"' "$STACK" | while read -r id; do grep -qF "\`$id\`" "$P/skills/setup/SKILL.md" || printf '%s ' "$id"; done)"
 check "setup lists every plugin the stack depends on (unlisted: ${unlisted:-none})" '[ -n "$(jq -r ".dependencies[]" "$STACK")" ] && [ -z "$unlisted" ]'
+# Build and Test pass the testing toolkit a phase, and its router names phases from 0.1.2 on, so the stack needs that version.
+tt_floor="$(jq -r '.dependencies[] | objects | select(.name == "testing-toolkit") | .version // empty' "$STACK")"
+check "the stack needs testing-toolkit 0.1.2 or later (floor: ${tt_floor:-none})" '[ "$tt_floor" = ">=0.1.2" ]'
+# setup reads its own table to tell the user what to install, so it states every floor the stack's manifest sets.
+unstated="$(jq -r '.dependencies[] | objects | select(.version) | "\(.name)@\(.marketplace) \(.version | ltrimstr(">="))"' "$STACK" \
+  | while read -r id v; do grep -F "\`$id\`" "$P/skills/setup/SKILL.md" | grep -qF "$v or later" || printf '%s ' "$id"; done)"
+check "setup states every version floor the stack sets (unstated: ${unstated:-none})" '[ -z "$unstated" ]'
 # A name prefix matched two pr-review plugins from different marketplaces, so a lookup names the full id.
 check "every plugin lookup names a full id ($(files_matching 'startswith\("[a-z-]+@"'))" '[ -z "$(files_matching "startswith\(\"[a-z-]+@\"")" ]'
 

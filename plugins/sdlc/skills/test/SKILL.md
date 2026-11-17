@@ -17,7 +17,7 @@ Feature: `$ARGUMENTS`
 
 ## Test
 
-1. **Run the final tests and check the rest.** Invoke `testing-toolkit:testing` on the whole branch, with the inputs and overrides in `testing-toolkit.md`. It writes and runs the tests the plan left for this stage, such as an end-to-end or a load test. It checks Build's tests against the plan's Tests section, finds changed code that no test checks, and writes the missing tests. Commit the tests it adds. Without the toolkit, write the final tests yourself and record why the check didn't run.
+1. **Run the final tests and check the rest.** Invoke `testing-toolkit:testing` on the whole branch, in its testing phase, with the inputs and overrides in `testing-toolkit.md`. It writes and runs the tests the plan left for this stage, such as an end-to-end or a load test. It checks Build's tests against the plan's Tests section, finds changed code that no test checks, and writes the missing tests. Commit the tests it adds. Without the toolkit, write the final tests yourself and record why the check didn't run.
 
 2. **Audit the tests.** Invoke `testing-toolkit:test-audit` on the test files the branch added or changed, as `testing-toolkit.md` describes. It removes or merges a test only when a stronger test covers the same contract, and it writes a ledger that says so. This is the stage's last change to the tests, so every later step sees the suite that ships.
 
@@ -31,7 +31,7 @@ Feature: `$ARGUMENTS`
 
 ## Prove
 
-7. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything. Wait for its report before you write `verify.md`.
+7. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything. Dispatch it even when the testing report has a `Verified:` line, because that run came from the session that tested the code, and the verifier's comes from a fresh context. Wait for its report before you write `verify.md`.
 
 8. **Model the code afresh, when the design was modelled.** If the feature has a property ledger, check its pins and dispatch the `fv-verifier` subagent, as `fv-toolkit.md` describes. It writes its own model from the code, without the RFC's model or the plan in view. Compare the two models property by property, and commit the model it wrote. A feature with no ledger skips this step.
 
@@ -62,6 +62,7 @@ Feature: `$ARGUMENTS`
 
 ## Tests
 - Report: `testing/test.md`, for the scenario <scenario>
+- Verified: <the report's `Verified:` line, as it reads>
 - Done when: <the playbook's condition, and whether it holds>
 - Final tests: <test names, each with its result>
 - Tests added to close a gap: <test names, or none>

@@ -14,7 +14,7 @@ The stages call five other plugins. `sdlc-stack` is a plugin in this marketplace
 | `egm@egm` | `google/elephant-goldfish-model` | The Goldfish review of each document |
 | `pr-review@aasimsani-pr-review` | `aasimsani/pr-review` | Code review in a fresh session. The stack needs 1.3.0 or later. |
 | `ponytail@ponytail` | `DietrichGebert/ponytail` | The smallest plan and the smallest code |
-| `testing-toolkit@testing-toolkit` | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests |
+| `testing-toolkit@testing-toolkit` | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests. The stack needs 0.1.2 or later. |
 | `fv-toolkit@formal-verification-toolkit` | `aasimsani/formal-verification-toolkit` | Formal checks of a design's claims |
 
 1. **Check Claude Code.** Run `claude --version`. EGM needs 2.1.271 or later to isolate its Goldfish reviewers. If the version is older, tell the user to update before using the loop.
