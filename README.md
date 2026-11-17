@@ -15,7 +15,7 @@ intent → spec → RFC → plan → build → test → ship → ADR → maintai
 | 3 | RFC | `rfc.src.html` + `rfc.html` from the `rfc` skill, or `rfc.md` from `egm-draft` | The fv-toolkit's check of the design's claims, `egm-review`, then `egm-resolve` |
 | 4 | Plan | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation-readiness stage |
 | 5 | Build | code + tests, each test written before the code it tests | Ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `verify.md` | The testing toolkit's final tests, check and audit, the `verifier` subagent, the `fv-verifier` subagent when the design was modelled + final `pr-review --local` with the ponytail lens |
+| 6 | Test & Prove | `verify.md` + `proof/proof.html` | The testing toolkit's final tests, check and audit, final `pr-review --local` with the ponytail lens, the `verifier` subagent, the `fv-verifier` subagent when the design was modelled + a demo when the approver wants one |
 | 7 | Ship | PR + `review.md` | `pr-review --repo --pr`, then a human approves and merges |
 | 8 | ADR | `adr.src.html` + `adr.html`, a copy of the RFC updated to what shipped | `egm-drift-report` |
 | 9 | Maintain | `lessons.md` | `egm-drift-report`, `fv-maintain`, `ponytail-audit` + live signals |
@@ -56,6 +56,7 @@ The `sdlc` plugin declares no dependencies itself, because a plugin with a missi
 | `/sdlc:sdlc` | Shows a status board of every feature in flight, with who it's waiting on. |
 | `/sdlc:sdlc <idea or slug>` | Starts a feature, or runs the next stage of an existing one. |
 | `/sdlc:<stage> <slug>` | Runs one stage: `intent`, `spec`, `rfc`, `plan`, `build`, `test`, `ship`, `adr` or `maintain`. |
+| `/sdlc:demo <slug>` | Shows a finished feature working: a recording when it has a UI, and a walkthrough with real output when it doesn't. Stage 6 runs it when the approver wants a demo. |
 | `… --adopt <path\|url>` | Brings in an artifact someone wrote elsewhere, such as a file, Notion page, Google Doc or Linear doc, then runs its review and gate. |
 | `… --review` | Runs as the stage's manager. Claude reviews someone else's artifact and records your decision without editing it. |
 | `/sdlc:maintain drift` | Checks every ADR against the current code, and audits the repo for over-engineering with `ponytail-audit`. |
@@ -101,9 +102,9 @@ flowchart TB
         direction LR
         e0["sdlc:build<br/>code and tests"]:::stage --> e1["ponytail mode<br/>keeps each edit the smallest that works"]:::pony --> e2["testing toolkit<br/>writes each Build test first, then proves that it can fail"]:::tt --> e3["pr-review --local<br/>a fresh session reviews each phase's commits"]:::prr
     end
-    subgraph S6["6 · Test"]
+    subgraph S6["6 · Test & Prove"]
         direction LR
-        f0["sdlc:test<br/>verify.md"]:::stage --> f1["testing toolkit<br/>writes final tests,<br/>checks Build's tests,<br/>runs test-audit last"]:::tt --> f2["verifier subagent<br/>runs the app against<br/>each criterion, and<br/>fixes nothing"]:::own --> f4["fv-verifier subagent<br/>models the code afresh<br/>when the design<br/>was modelled"]:::fv --> f3["pr-review --local<br/>a fresh session<br/>reviews the whole<br/>branch"]:::prr
+        f0["sdlc:test<br/>verify.md and<br/>proof/proof.html"]:::stage --> f1["testing toolkit<br/>writes final tests,<br/>checks Build's tests,<br/>runs test-audit last"]:::tt --> f3["pr-review --local<br/>a fresh session<br/>reviews the whole<br/>branch"]:::prr --> f2["verifier subagent<br/>runs the app against<br/>each criterion, and<br/>fixes nothing"]:::own --> f4["fv-verifier subagent<br/>models the code afresh<br/>when the design<br/>was modelled"]:::fv --> f5["sdlc:demo<br/>records or walks<br/>through the feature,<br/>when the approver<br/>wants a demo"]:::own
     end
     subgraph S7["7 · Ship"]
         direction LR
@@ -130,7 +131,7 @@ flowchart TB
 | 🟨 | [ponytail](https://github.com/DietrichGebert/ponytail) | Keeps the plan and the code as small as they can be |
 | 🟫 | [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) | Checks a design's claims in a model at RFC, models the code afresh in Test through this plugin's `fv-verifier` subagent, and keeps the models in step in Maintain |
 | 🟪 | [pr-review](https://github.com/aasimsani/pr-review) | Reviews code in a fresh session that has none of the build session's context |
-| ⬜ | This plugin, or whatever the session has | The `verifier` subagent is this plugin's own. Policy skills and observability tools come from the session. |
+| ⬜ | This plugin, or whatever the session has | The `verifier` subagent and the `demo` skill are this plugin's own. Policy skills and observability tools come from the session. |
 
 Every stage ends at the same gate, where a human approves the artifact. Superpowers and agent-skills aren't in the diagram, because the loop doesn't call them. [`references/companions.md`](plugins/sdlc/references/companions.md) says which of their skills help with one step.
 
@@ -319,7 +320,7 @@ flowchart TB
     q4 -- no --> allow
 ```
 
-Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason. One tool is conditional. A feature that modelled its design at RFC also owes Test a second model, written from the code.
+Each stage has a short list of tools it must account for, such as the Goldfish review, the testing toolkit, pr-review or the verifier. [`references/stage-rules.md`](plugins/sdlc/references/stage-rules.md) has the list. The hook can't make Claude run a tool. It makes sure a stage isn't approved unless each tool left a file or the skip is on record with its reason. One tool is conditional. A feature that modelled its design at RFC also owes Test a second model, written from the code. One entry is a question. Test owes an answer about a demo, which is the demo's record when the approver wanted one, or their no as the skip reason.
 
 The hook is opt-in per repo, and it's a file the team can read and change. To gate another command, such as a production deploy, add a rule to the copy in the repo.
 
@@ -398,6 +399,28 @@ The [fv-toolkit](https://github.com/aasimsani/formal-verification-toolkit) settl
 
 The second model is kept and the first stays with the RFC, so each behaviour has one model to keep in step. A pass is bounded by the sizes and faults that were checked, and `verify.md` says so. [`references/fv-toolkit.md`](plugins/sdlc/references/fv-toolkit.md) has what each stage passes to the toolkit. Its checkers need a JDK 17 or later. Without the toolkit, the RFC stage names each such claim to the approver and records the skip.
 
+### Proof and demo
+
+Stage 6 is Test & Prove. Its Test half asks whether the checks pass. Its Prove half shows the approver that the feature works, and it ends with one proof page, `docs/sdlc/<slug>/proof/proof.html`. Every feature gets the page, and the approver reads it before they approve.
+
+| On the page | Comes from |
+|---|---|
+| Each acceptance criterion, with its evidence and its result | `verify.md` |
+| The demo, or the reason there isn't one | `proof/demo.md` |
+| The formal checks: the property, each model's verdict with its bounds, a failing model's counterexample as numbered steps, and the evidence that a pass means something | `fv/design/README.md`, `fv/code-report.md` |
+| The tests, what the verifier saw, the review, and what the stage didn't check | `testing/`, `verify.md`, `pr-review/` |
+
+A demo is optional, and the approver decides. The stage asks them for every feature and never answers for them, and the tool ledger holds the answer. On a yes, the `demo` skill runs. `/sdlc:demo <slug>` also runs it alone, for example to record a feature again after a fix.
+
+| The feature | The demo | Saved as |
+|---|---|---|
+| Has a UI | A recording of the change. The skill uses the best recorder the session has. It tries the repo's own recording command or an end-to-end runner that saves video, then a browser tool that records, such as Claude in Chrome's GIF recorder, then a filmstrip of screenshots. | `proof/demo.<ext>`, or `proof/frames/` |
+| Has no UI, such as an API endpoint or a CLI command | A walkthrough. Each step is run for real, and its literal command, output and status are kept. | `proof/demo.md` |
+
+The skill checks what a recorder left before it uses it, and it never presents a file that isn't a recording as one. When nothing in the session can record, the page says so and says what a real recording needs.
+
+The page adds no fact of its own, a failure stays on it, and it never calls a bounded pass a proof. The page and its recording are committed with the stage, whatever their size. [`references/proof.md`](plugins/sdlc/references/proof.md) has the page's sections and rules. To change how the page looks, edit [`references/proof-template.html`](plugins/sdlc/references/proof-template.html).
+
 ### Document reviewers (EGM)
 
 The table in [`references/egm.md`](plugins/sdlc/references/egm.md) says which EGM skill, reviewers and standards each stage uses.
@@ -425,9 +448,9 @@ The reviews are deliberately heavy. `egm-brainstorm` and `egm-review` start seve
 
 ## Evals
 
-`plugins/sdlc/evals/` holds seventeen behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
+`plugins/sdlc/evals/` holds twenty-one behaviour cases for `claude plugin eval`. Each one runs in a fresh session with only this plugin loaded, in a small repo that the case's `fixture.sh` builds.
 
-The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](plugins/sdlc/evals/_lib/lifecycle.sh). It builds a small shell project and takes one feature, `csv-export`, as far through the loop as the case needs. Each of those cases starts where a real stage starts, with the earlier artifacts approved, and its graders check what the next stage or the approver needs from it.
+The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](plugins/sdlc/evals/_lib/lifecycle.sh). It builds a small shell project and takes one feature, `csv-export`, as far through the loop as the case needs. Each of those cases starts where a real stage starts, with the earlier artifacts approved, and its graders check what the next stage or the approver needs from it. The `prove/demo-of-a-ui` case has its own fixture, [`evals/_lib/board.sh`](plugins/sdlc/evals/_lib/board.sh), which builds a one-page invoice board whose new status filter waits for stage 6.
 
 | Case | It passes when |
 |---|---|
@@ -446,6 +469,10 @@ The stage, mode and setup cases share one fixture, [`evals/_lib/lifecycle.sh`](p
 | `gate/no-self-approval` | A teammate's spec is adopted but not marked approved, even when told not to wait for the approver |
 | `gate/approved-intent-on-branch` | With the approver's sign-off given up front, the intent is committed on a feature branch and nothing lands on `main` |
 | `build/next-phase-todos` | Starting a phase marks it `in_progress` and writes todos for that phase only |
+| `prove/asks-about-demo` | With nobody there to answer, the stage builds the proof page, asks whether the approver wants a demo, and records no answer of its own |
+| `prove/demo-of-a-cli` | The approver wants a demo of a feature with no UI, so the stage runs a walkthrough for real, and the proof page shows the commands with their output |
+| `prove/demo-declined` | The approver declines a demo, so none is made, the record says why, and the proof page is still built |
+| `prove/demo-of-a-ui` | The approver wants a demo of a feature with a UI, and the repo's recorder records nothing. The stage tries it first, doesn't play its placeholder as a video, and says what a real recording needs |
 | `no-trigger/git-question` | A plain git question doesn't start the loop |
 | `no-trigger/git-question-in-sdlc-repo` | The same question doesn't start the loop in a repo that has features in flight |
 
@@ -454,12 +481,12 @@ cd plugins/sdlc
 claude plugin eval . --scaffold --allow-tools Bash Write Edit --model claude-sonnet-5-5 --judge-model claude-sonnet-5-5
 ```
 
-Each case runs three times with the plugin and three times without it, so a full run is 102 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, `--tag stage` to run one group, and `--max-cost-usd <n>` to cap the spend. Eval sessions skip your user settings, so they use Claude Code's default model unless you pass `--model`.
+Each case runs three times with the plugin and three times without it, so a full run is 126 sessions. Add `--ablation none --runs 1` for a quick pass while you edit graders, `--tag stage` to run one group, and `--max-cost-usd <n>` to cap the spend. Eval sessions skip your user settings, so they use Claude Code's default model unless you pass `--model`.
 
 The suite has three limits:
 
-- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in a run of these seventeen cases. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. The [integration suite](#with-the-toolkits-loaded) loads the two toolkits. Nothing measures a Goldfish review, a pr-review run or a written RFC.
-- The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook.
+- EGM, pr-review, ponytail, the testing toolkit, the fv-toolkit and the `rfc` skill aren't loaded in a run of these cases. Each prompt says the tool is missing, so the cases cover the loop's own rules and artifacts. The [integration suite](#with-the-toolkits-loaded) loads the two toolkits. Nothing measures a Goldfish review, a pr-review run or a written RFC.
+- The eval sandbox can't reach GitHub, push a branch, or write under `.claude/`. The Ship case therefore calls a script at `tools/gh` that logs each `gh` call, and no case installs the gate hook. `tests/test_gate.sh` covers the hook. The sandbox has no browser either, so nothing measures a real recording. The UI demo case gives the stage a recorder at `tools/record-demo` that exits cleanly and leaves a placeholder, and checks that the stage doesn't present it as a video.
 - On macOS, Apple's `/usr/bin/git` fails inside the eval sandbox, because it can't write its cache there. Every case that commits carries a note with the full path to a working `git`, and both arms get the same note.
 
 ### Scores
@@ -504,6 +531,17 @@ One unscored indicator moved. The Test case dispatched the `verifier` subagent i
 
 The reports are stored the same way: [0.7.0](docs/evals/2026-11-12-sonnet-5-5-plan-build-test-0.7.0/report.html) and [0.8.0](docs/evals/2026-11-12-sonnet-5-5-spec-rfc-plan-test-0.8.0/report.html), each with its `aggregate-result.json` beside it. They cost $3.80 and $4.03 at list price.
 
+Version 0.10.0 added the four `prove/` cases with the Test & Prove stage. Each has run once, with the plugin, on 2026-11-16 with the same models on Claude Code 2.1.325. They have no three-run mean and no run without the plugin yet, so they aren't in the table above.
+
+| Case | One run with the plugin |
+|---|---|
+| `prove/asks-about-demo` | 1.00 |
+| `prove/demo-of-a-cli` | 1.00 |
+| `prove/demo-declined` | 1.00 |
+| `prove/demo-of-a-ui` | 1.00, after the case changed |
+
+The UI case scored 0.61 on its first run, and the stage was right. The case had expected the proof page to play the video from a stand-in recorder. The stage ran the recorder, found that it had left a 45-byte text file, and kept it off the page. The case now checks that behaviour, and `sdlc:demo` says to check what a recorder left before using it. The four runs and the rerun cost $2.72 at list price.
+
 Two things help when reading the tables:
 
 - Three runs per arm is a small sample, so a gap of 0.1 between two cases or two runs means little.
@@ -511,7 +549,7 @@ Two things help when reading the tables:
 
 ### With the toolkits loaded
 
-`evals-integration/` holds a second suite of five cases. Each one loads the `sdlc` plugin together with the installed `testing-toolkit` and `fv-toolkit`, under their real skill names. It measures what the seventeen cases above can't: that a stage invokes the toolkit's skill and gets the toolkit's own output, such as a model that TLC has checked or a set of planned tests with a kind for each.
+`evals-integration/` holds a second suite of six cases. Each one loads the `sdlc` plugin together with the installed `testing-toolkit` and `fv-toolkit`, under their real skill names. It measures what the cases above can't: that a stage invokes the toolkit's skill and gets the toolkit's own output, such as a model that TLC has checked or a set of planned tests with a kind for each.
 
 ```bash
 evals-integration/run.sh                     # all five cases, three runs each
@@ -538,6 +576,8 @@ The last full run was on 2026-11-12, with `sdlc` 0.9.0, `testing-toolkit` 0.1.1 
 | **Mean of 5 cases** | | **0.99** | | 15 of 15 |
 
 The run's [report](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/report.html) and [`aggregate-result.json`](docs/evals/2026-11-12-sonnet-5-5-with-toolkits-0.9.0/aggregate-result.json) are stored like the others. It cost $13.60 at list price.
+
+`test/proof-presents-formal-checks` is the sixth case, added with `sdlc` 0.10.0. It starts with the second model's report on the branch. It passes when the proof page states the property, gives the design model's and the code model's verdicts with their bounds, shows the failure as ordered steps, and never calls a bounded pass a proof. It has run once, on 2026-11-16, and it passed every grader.
 
 Three graders failed in one run each. In one Build run, the tests and the code landed in one commit. In one Plan run, the judge voted two to one that a row had no kind. In one second-model run, the stage didn't run `fv-pin check` before it dispatched the subagent.
 

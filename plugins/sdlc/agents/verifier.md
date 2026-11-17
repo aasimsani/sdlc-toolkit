@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Fresh-context final check for SDLC stage 5. Runs the app and exercises the changed behavior against spec.md and plan.md, then reports what it saw. Reports only and never fixes anything.
+description: Fresh-context final check for SDLC stage 6. Runs the app and exercises the changed behavior against spec.md and plan.md, then reports what it saw. Reports only and never fixes anything.
 tools: Read, Grep, Glob, Bash
 ---
 

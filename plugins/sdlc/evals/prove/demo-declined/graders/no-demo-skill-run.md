@@ -1,0 +1,8 @@
+---
+# A declined demo is never recorded anyway.
+type: tool_used
+tool: Skill
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?demo"'
+min: 0
+max: 0
+---

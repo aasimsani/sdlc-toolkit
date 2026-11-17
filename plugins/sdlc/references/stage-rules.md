@@ -54,7 +54,7 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 | RFC | `rfc-skill`, `formal-verification`, `goldfish` |
 | Plan | `testing`, `goldfish` |
 | Build | `ponytail`, `testing`, `pr-review` |
-| Test | `testing`, `test-audit`, `verifier`, `pr-review` |
+| Test | `testing`, `test-audit`, `verifier`, `pr-review`, `demo` |
 | Ship | `pr-review` |
 | ADR | `goldfish` |
 | Maintain | none |
@@ -67,6 +67,7 @@ A stage isn't approved until its `tools` entry accounts for each tool in its row
 - `test-audit` is the testing toolkit's `test-audit` skill, and its file is its ledger, `testing/audit.md`.
 - `pr-review` is the stage's last report under `pr-review/`.
 - `verifier` is the verifier subagent, and its file is `verify.md`, which holds its report.
+- `demo` is the `demo` skill, and its file is its record, `proof/demo.md`. A demo is optional, so the stage asks the approver whether they want one, and a no is the skip reason. Only the approver's answer settles this entry.
 
 ## Branches and history
 
