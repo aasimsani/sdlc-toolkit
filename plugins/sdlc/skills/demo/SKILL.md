@@ -14,7 +14,7 @@ Feature: `$ARGUMENTS`
 
 ## Steps
 
-1. **Write the script.** Read the acceptance criteria in `spec.md`. Choose three to seven steps that a user or a caller would take, in the order they would take them. Each step names what is done, what should appear, and the criterion it shows. Start `docs/sdlc/<slug>/proof/demo.md` from the template with these steps, before you run anything.
+1. **Write the script.** Read the acceptance criteria in `spec.md`. Choose three to seven steps that a user or a caller would take, in the order they would take them. When the verifier's report in `verify.md` already walks the criteria, start from its steps, because the demo shows the same feature. Each step names what is done, what should appear, and the criterion it shows. Start `docs/sdlc/<slug>/proof/demo.md` from the template with these steps, before you run anything.
 
 2. **Pick the kind of demo.** A feature that a person sees in a browser or an app window gets a recording. A feature with no UI, such as an API endpoint, a CLI command, a job or a library, gets a walkthrough. A feature with both gets both.
 

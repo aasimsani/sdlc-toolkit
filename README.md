@@ -40,7 +40,7 @@ The stages call five other plugins. The marketplace has a second plugin, `sdlc-s
 | `egm@egm` | `google/elephant-goldfish-model` | The Goldfish review of each document |
 | `pr-review@aasimsani-pr-review`, 1.3.0 or later | `aasimsani/pr-review` | Code review in a fresh session |
 | `ponytail@ponytail` | `DietrichGebert/ponytail` | The smallest plan and the smallest code |
-| `testing-toolkit@testing-toolkit` | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests |
+| `testing-toolkit@testing-toolkit`, 0.1.2 or later | `aasimsani/testing-toolkit` | Deciding, writing and auditing the tests |
 | `fv-toolkit@formal-verification-toolkit` | `aasimsani/formal-verification-toolkit` | Formal checks of a design's claims |
 
 - **Installing.** `claude plugin install sdlc-stack@sdlc-toolkit` installs each dependency whose marketplace is already added. Adding a missing marketplace then installs its plugin without another command.
@@ -195,11 +195,14 @@ flowchart TB
         red["Red<br/>The testing toolkit writes the phase's Build tests, and each one fails for the expected reason."]
         green["Green<br/>The smallest code that makes them pass is written, and the verify command passes."]
         proven["Proven<br/>Each test gives the same result over five runs, and fails on a planted bug."]
+        flaky["Flagged flaky<br/>A test's result changes over five runs, and the cause isn't known yet."]
         review["Review<br/>pr-review --local reads the phase's commits in a fresh session."]
         fix["Fix it and commit"]
         paused["Paused<br/>One wip commit, and a Resume line under the todos."]
         red -- "commit the tests" --> green
         green --> proven
+        green -- "a test is flaky" --> flaky
+        flaky -- "the cause is found and fixed" --> proven
         proven -- "commit" --> review
         review -- "a blocking finding is open" --> fix
         fix --> review
@@ -224,7 +227,9 @@ stateDiagram-v2
     Chosen --> Failing: a Build test is written before the code
     Failing --> Passing: the phase's code is written
     Passing --> Proven: five identical runs, and a failure on a planted bug
-    Passing --> Dropped: it fails one of those checks
+    Passing --> Dropped: it never fails on a planted bug
+    Passing --> Flaky: its result changes over five runs, and the cause isn't known
+    Flaky --> Proven: the cause is found and fixed, and until then the phase isn't done
     Proven --> Checked: Test compares it with the plan
     Chosen --> Late: a final test waits for the whole feature
     [*] --> Late: Test finds changed code that no test checks
@@ -369,9 +374,11 @@ Build is test first, so the tests are decided before any code exists. Build and 
 | | Build tests | Final tests |
 |---|---|---|
 | What they're for | Each one drives one phase's code | Each one checks the feature once every phase is on the branch |
-| Kinds that usually fit | Unit, integration, the consumer side of a contract, characterization | End-to-end, load, fuzz, a long property run, mutation and diff coverage |
+| The toolkit's phase | Building, test-first | Testing code that exists |
 | Written | In Build, before the code | In Test |
 | When one fails | The phase isn't done | The feature goes back to Build as a new phase |
+
+Each set is one of the toolkit's phases, and the stage that writes a test passes the phase, so the toolkit picks the kinds. In the testing phase it ranks first the kinds an agent's own reading of the code can't satisfy. So the plan's final tests default to an end-to-end check for each criterion with a user path, and a differential test for each change that must keep behaviour.
 
 The toolkit's `testing` skill does one job across three stages, and its `test-audit` skill closes the Test stage's work on the tests:
 
@@ -379,7 +386,7 @@ The toolkit's `testing` skill does one job across three stages, and its `test-au
 |---|---|---|
 | Plan | Classifies the change and picks a kind of test for each component. It writes no test. | The Tests section of `plan.md`, with the stage that writes each test |
 | Build | Writes each phase's Build tests before the code. After the phase is green, it proves that each test is stable and fails on a planted bug. | `testing/build.md` |
-| Test | Writes and runs the final tests, checks Build's tests against the plan, and writes a test for changed code that has none | `testing/test.md` |
+| Test | Writes and runs the final tests, checks Build's tests against the plan, and writes a test for changed code that has none. Its report ends with a `Verified:` line that says what one run of the real system showed. | `testing/test.md`, and the `Verified:` line in `verify.md` |
 | Test, last | `test-audit` removes or merges a test only when a stronger one covers the same contract | `testing/audit.md` |
 
 The audit is the stage's last change to the tests. It runs before the verify command, the verifier and the final pr-review, so their evidence describes the suite that ships. [`references/testing-toolkit.md`](plugins/sdlc/references/testing-toolkit.md) says what each stage passes to the toolkit and where the loop's order wins over the toolkit's. Without the toolkit, each stage does its own part by hand, Test skips the check and the audit, and `sdlc.yaml` records each skip.
