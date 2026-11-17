@@ -14,7 +14,7 @@ Feature: `$ARGUMENTS`
 
 ## Steps
 
-1. **Open the PR.** Stop if `verify.md` isn't approved. Push the branch and open the PR with the repo's PR conventions. The PR body links every artifact in `docs/sdlc/<slug>/`, so the reviewer can read the reasoning without asking.
+1. **Open the PR.** Stop if `verify.md` isn't approved. Push the branch and open the PR with the repo's PR conventions. The PR body links every artifact in `docs/sdlc/<slug>/`, with the proof page first, so the reviewer can see the feature work and read the reasoning without asking.
 
 2. **Run pr-review on the PR** with `--repo <owner/name> --pr <n>`, as `pr-review.md` describes. This run reviews the head that was actually pushed, including any merge from the base branch.
 

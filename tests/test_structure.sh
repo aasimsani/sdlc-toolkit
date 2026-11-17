@@ -61,6 +61,13 @@ check "every tool the gate hook requires has its file defined (undefined: ${unde
 ledger_files="$(grep -rlE --exclude-dir=evals --include='*.md' 'skipped: <reason>' "$P" | sed "s|$P/||" | tr '\n' ' ')"
 check "the tool ledger's format is stated in one file ($ledger_files)" '[ "$(echo $ledger_files | wc -w | tr -d " ")" = 1 ]'
 
+# proof.md names the proof page's sections and proof-template.html builds them, so the two lists must agree.
+page_sections() { grep -oE '^\| `#[a-z-]+`' "$P/references/proof.md" 2>/dev/null | tr -d '|`# ' | sort | tr '\n' ' '; }
+template_sections() { grep -oE '<section id="[a-z-]+"' "$P/references/proof-template.html" 2>/dev/null | sed 's/.*id="//; s/"//' | sort | tr '\n' ' '; }
+check "the proof template has the sections proof.md names ($(page_sections))" '[ -n "$(page_sections)" ] && [ "$(page_sections)" = "$(template_sections)" ]'
+# The Test stage asks about a demo, and the demo skill is what a yes runs, so the stage must name the skill and the skill must exist.
+check "the test stage hands a wanted demo to the demo skill" 'grep -q "sdlc:demo" "$P/skills/test/SKILL.md" && [ -f "$P/skills/demo/SKILL.md" ]'
+
 # The stages call other plugins. plugins/sdlc-stack declares them, and Claude Code installs and tracks them from there.
 STACK="$(cd "$(dirname "$0")/.." && pwd)/plugins/sdlc-stack/.claude-plugin/plugin.json"
 # sdlc itself declares none, because a plugin with a missing dependency doesn't load, and then sdlc:setup can't run.

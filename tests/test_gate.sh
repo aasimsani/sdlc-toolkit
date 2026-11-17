@@ -104,8 +104,16 @@ state '  rfc: {status: approved, artifact: rfc.src.html, tools: {rfc-skill: rfc.
 check "RFC isn't approved without the formal check on record" deny  "$T/led" "$c"
 state '  rfc: {status: approved, artifact: rfc.src.html, tools: {rfc-skill: rfc.src.html, formal-verification: "skipped: no claim earns a formal check", goldfish: egm/spec-review.md}}'
 check "a formal check that found no claim is a recorded skip"   allow "$T/led" "$c"
-all_test='testing: testing/test.md, test-audit: testing/audit.md, verifier: verify.md, pr-review: pr-review/build-1.md'
+no_demo='testing: testing/test.md, test-audit: testing/audit.md, verifier: verify.md, pr-review: pr-review/build-1.md'
+state "  test: {status: approved, artifact: verify.md, tools: {$no_demo}}"
+check "Test isn't approved until the demo question has an answer on record" deny "$T/led" "$c"
+state "  test: {status: approved, artifact: verify.md, tools: {$no_demo, demo: proof/demo.md}}"
+check "a demo on record needs the file it produced"           deny  "$T/led" "$c"
+mkdir -p "$L/proof"; touch "$L/proof/demo.md"
+check "a demo with its record is allowed"                     allow "$T/led" "$c"
+all_test="$no_demo, demo: \"skipped: Lee declined\""
 state "  test: {status: approved, artifact: verify.md, tools: {$all_test}}"
+check "a demo the approver declined is a recorded skip"       allow "$T/led" "$c"
 check "Test needs no second model when the design wasn't modelled" allow "$T/led" "$c"
 mkdir -p "$L/fv/design"; touch "$L/fv/design/README.md"
 check "a modelled design owes Test a model written from the code" deny "$T/led" "$c"

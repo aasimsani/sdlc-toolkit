@@ -27,7 +27,7 @@ required_tools() {
     plan)  echo "testing goldfish" ;;
     rfc)   echo "rfc-skill formal-verification goldfish" ;;
     build) echo "ponytail testing pr-review" ;;
-    test)  echo "testing test-audit verifier pr-review" ;;
+    test)  echo "testing test-audit verifier pr-review demo" ;;
     ship)  echo "pr-review" ;;
   esac
 }

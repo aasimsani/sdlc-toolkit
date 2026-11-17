@@ -17,7 +17,7 @@ Each stage ends by committing one artifact, and that commit starts the next stag
 | 3 | RFC | `sdlc:rfc` | `rfc.src.html` + `rfc.html` | the fv-toolkit's check of the design's claims, `egm-review`, then `egm-resolve` |
 | 4 | Plan | `sdlc:plan` | `plan.md`, with the tests the testing toolkit chose | `egm-review` implementation stage |
 | 5 | Build | `sdlc:build` | code + tests, each test written first | ponytail mode while coding, then `pr-review --local` with the ponytail lens after each phase |
-| 6 | Test | `sdlc:test` | `verify.md` | the testing toolkit's final tests, check and audit, the `verifier` subagent, the `fv-verifier` subagent when the design was modelled + final `pr-review --local` with the ponytail lens |
+| 6 | Test & Prove | `sdlc:test` | `verify.md` + `proof/proof.html` | the testing toolkit's final tests, check and audit, final `pr-review --local` with the ponytail lens, the `verifier` subagent, the `fv-verifier` subagent when the design was modelled + a demo from `sdlc:demo` when the approver wants one |
 | 7 | Ship | `sdlc:ship` | PR + `review.md` | `pr-review --repo --pr`, then a human |
 | 8 | ADR | `sdlc:adr` | `adr.src.html` + `adr.html` (a copy of the RFC, updated to what shipped) | `egm-drift-report` |
 | 9 | Maintain | `sdlc:maintain` | `lessons.md` | `egm-drift-report`, `ponytail-audit`, live signals |

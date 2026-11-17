@@ -1,18 +1,21 @@
 ---
 name: test
-description: SDLC stage 6. Proves every acceptance criterion with literal evidence, writes the final tests and audits the suite with the testing toolkit, runs the fresh-context verifier subagent and a final pr-review --local, and commits docs/sdlc/<slug>/verify.md. Use when the user runs /sdlc:test or the sdlc skill routes here.
+description: SDLC stage 6, Test & Prove. Tests the finished feature, then proves it to the approver. Writes the final tests and audits the suite with the testing toolkit, runs a final pr-review --local, dispatches the fresh-context verifier subagent, asks the approver whether they want a demo, and commits docs/sdlc/<slug>/verify.md with the proof page beside it. Use when the user runs /sdlc:test or the sdlc skill routes here.
 argument-hint: "<slug>"
 ---
 
-# Stage 6 — Test
+# Stage 6 — Test & Prove
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/pr-review.md` and `${CLAUDE_PLUGIN_ROOT}/references/testing-toolkit.md`. When the feature has a property ledger in `fv/design/`, it uses `${CLAUDE_PLUGIN_ROOT}/references/fv-toolkit.md` too.
+Read `${CLAUDE_PLUGIN_ROOT}/references/stage-rules.md` first. This stage also uses `${CLAUDE_PLUGIN_ROOT}/references/pr-review.md`, `${CLAUDE_PLUGIN_ROOT}/references/testing-toolkit.md` and `${CLAUDE_PLUGIN_ROOT}/references/proof.md`. When the feature has a property ledger in `fv/design/`, it uses `${CLAUDE_PLUGIN_ROOT}/references/fv-toolkit.md` too.
 
-The build session already ran its own checks. This stage first finishes the testing, because a green suite proves only what its tests check. It writes the tests that need the whole feature, checks the tests Build wrote, and audits the suite. Then it adds two looks from agents that didn't write the code. The verifier runs the behavior, and pr-review reads the whole branch. It also records evidence a reviewer can read without rerunning anything.
+The build session already ran its own checks. This stage has two halves, and each one answers its own question.
+
+- **Test** asks whether the checks pass. A green suite proves only what its tests check, so this half finishes the testing first. It writes the tests that need the whole feature, checks the tests Build wrote, audits the suite, and has pr-review read the whole branch.
+- **Prove** asks whether the approver can see the feature work. Agents that didn't write the code run it and model it. The approver gets a demo when they want one. Then one proof page puts the evidence in front of them, so they can decide without rerunning anything.
 
 Feature: `$ARGUMENTS`
 
-## Steps
+## Test
 
 1. **Run the final tests and check the rest.** Invoke `testing-toolkit:testing` on the whole branch, with the inputs and overrides in `testing-toolkit.md`. It writes and runs the tests the plan left for this stage, such as an end-to-end or a load test. It checks Build's tests against the plan's Tests section, finds changed code that no test checks, and writes the missing tests. Commit the tests it adds. Without the toolkit, write the final tests yourself and record why the check didn't run.
 
@@ -20,19 +23,25 @@ Feature: `$ARGUMENTS`
 
 3. **Run the verify command** on a clean checkout of the feature branch, and keep the literal output.
 
-4. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything. Wait for its report before you write `verify.md`.
+4. **Check the UI if there is one.** Open it with the browser tools, take screenshots, and compare them against the spec or the mockups.
 
-5. **Model the code afresh, when the design was modelled.** If the feature has a property ledger, check its pins and dispatch the `fv-verifier` subagent, as `fv-toolkit.md` describes. It writes its own model from the code, without the RFC's model or the plan in view. Compare the two models property by property, and commit the model it wrote. A feature with no ledger skips this step.
+5. **Run the final `pr-review --local`** on the whole branch, as `pr-review.md` describes, and compare it with the last Build run. A blocking finding sends the feature back to Build. This run also catches over-engineering that only shows across phases, such as an option no phase ended up using, so record its "Net:" line in `verify.md`.
 
-6. **Check the UI if there is one.** Open it with the browser tools, take screenshots, and compare them against the spec or the mockups.
+6. **Run the agent evals if the diff changes them.** When the diff touches `CLAUDE.md`, `.claude/**` or skills, and the repo has an eval suite, run it and record the pass rate.
 
-7. **Run the final `pr-review --local`** on the whole branch, as `pr-review.md` describes, and compare it with the last Build run. A blocking finding sends the feature back to Build. This run also catches over-engineering that only shows across phases, such as an option no phase ended up using, so record its "Net:" line in `verify.md`.
+## Prove
 
-8. **Run the agent evals if the diff changes them.** When the diff touches `CLAUDE.md`, `.claude/**` or skills, and the repo has an eval suite, run it and record the pass rate.
+7. **Dispatch the `verifier` subagent.** Pass it the paths to `spec.md` and `plan.md` and the verify command. It runs the app, exercises each acceptance criterion and reports what it saw. It never fixes anything. Wait for its report before you write `verify.md`.
 
-9. **Write `docs/sdlc/<slug>/verify.md`** from the template. Every acceptance criterion needs evidence a reader can check, such as a test name, command output or a screenshot path. When the repo has a verification skill, add or update its feature file for this feature on the same branch, so the next change to the feature is checked the same way.
+8. **Model the code afresh, when the design was modelled.** If the feature has a property ledger, check its pins and dispatch the `fv-verifier` subagent, as `fv-toolkit.md` describes. It writes its own model from the code, without the RFC's model or the plan in view. Compare the two models property by property, and commit the model it wrote. A feature with no ledger skips this step.
 
-10. **Gate.** If any criterion fails, a test the testing skill wrote fails on the code, the code breaks a confirmed property, or the verifier sees behavior that doesn't match the plan, add a phase to `plan.md` for the failures and go back to `sdlc:build`. If everything passes, get approval and commit `verify.md`, the testing report, the audit ledger, the pr-review report and `sdlc.yaml` together.
+9. **Ask the approver whether they want a demo.** Ask for every feature, with a UI or without one, and ask before you build the proof page. Say what the demo would be: a recording of the change for a feature with a UI, or a walkthrough with its real output for a feature without one. On a yes, invoke `sdlc:demo`. On a no, the approver's answer is the skip reason, such as "Lee declined". Never answer for them. When nobody can answer during the run, carry on with the next steps, leave `demo` out of the stage's `tools`, and say that the stage waits on that answer.
+
+10. **Write `docs/sdlc/<slug>/verify.md`** from the template. Every acceptance criterion needs evidence a reader can check, such as a test name, command output or a screenshot path. When the repo has a verification skill, add or update its feature file for this feature on the same branch, so the next change to the feature is checked the same way.
+
+11. **Build the proof page**, `docs/sdlc/<slug>/proof/proof.html`, as `proof.md` describes. Every feature gets one, with a demo or without. It shows each criterion with its evidence, the demo or the reason there isn't one, and the parts of the formal checks that the approver needs to see. A stage that fails gets its page too, so the approver sees what failed.
+
+12. **Gate.** If any criterion fails, a test the testing skill wrote fails on the code, the code breaks a confirmed property, or the verifier sees behavior that doesn't match the plan, add a phase to `plan.md` for the failures and go back to `sdlc:build`. If everything passes, give the approver the proof page and ask for approval. Then commit `verify.md`, everything in `proof/`, the testing report, the audit ledger, the pr-review report and `sdlc.yaml` together.
 
 ## Template
 
@@ -77,6 +86,10 @@ Leave this section out when the feature has no property ledger.
 - SIMPLE cuts left in, with reasons: <fingerprint — reason>
 - Fixed since Build: <fingerprints>
 - Open, with reasons: <fingerprint — reason>
+
+## Proof
+- Page: `proof/proof.html`
+- Demo: <`proof/demo.md`, with its kind and recorder. Or "none", with the approver's reason. Or "waiting on <approver>'s answer">
 
 ## Gaps
 - <anything untested, and why>
